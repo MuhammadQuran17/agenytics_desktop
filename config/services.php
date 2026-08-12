@@ -22,6 +22,10 @@ return [
         ],
     ],
 
+    'playwright_mcp' => [
+        'url' => env('PLAYWRIGHT_MCP_URL', 'http://localhost:8931/mcp'),
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
