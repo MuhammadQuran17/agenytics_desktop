@@ -1,0 +1,94 @@
+services:
+
+    ai_starter_kit:
+        build:
+            context: './vendor/laravel/sail/runtimes/8.4'
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: '${WWWGROUP}'
+        image: 'sail-8.4/app'
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        ports:
+            - '${APP_PORT:-80}:80'
+            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
+            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
+            IGNITION_LOCAL_SITES_PATH: '${PWD}'
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        depends_on:
+            - pgsql
+
+    pgsql:
+        image: 'postgres:17'
+        ports:
+            - '${FORWARD_DB_PORT:-5432}:5432'
+        environment:
+            PGPASSWORD: '${DB_PASSWORD:-secret}'
+            POSTGRES_DB: '${DB_DATABASE}'
+            POSTGRES_USER: '${DB_USERNAME}'
+            POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
+        volumes:
+            - 'sail-pgsql:/var/lib/postgresql/data'
+            - './vendor/laravel/sail/database/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql'
+            - './docker_specific/database/init:/docker-entrypoint-initdb.d'
+        networks:
+            - sail
+        healthcheck:
+            test:
+                - CMD
+                - pg_isready
+                - '-q'
+                - '-d'
+                - '${DB_DATABASE}'
+                - '-U'
+                - '${DB_USERNAME}'
+            retries: 3
+            timeout: 5s
+
+    n8n:
+        image: n8nio/n8n:latest
+        environment:
+            - DB_TYPE=postgresdb
+            - DB_POSTGRESDB_HOST=pgsql
+            - DB_POSTGRESDB_PORT=5432
+            - DB_POSTGRESDB_DATABASE=n8n_database
+            - DB_POSTGRESDB_USER=${DB_USERNAME}
+            - DB_POSTGRESDB_PASSWORD=${DB_PASSWORD}
+            # - N8N_DIAGNOSTICS_ENABLED=false
+            # - N8N_PERSONALIZATION_ENABLED=false
+            # - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+            # - N8N_USER_MANAGEMENT_JWT_SECRET=${N8N_USER_MANAGEMENT_JWT_SECRET}
+        ports:
+            - 5678:5678
+        networks:
+            - sail
+        volumes:
+            - n8n_storage:/home/node/.n8n
+            - ./n8n/backup:/backup
+        depends_on:
+            pgsql:
+                condition: service_healthy
+
+    mailpit:
+        image: 'axllent/mailpit:latest'
+        ports:
+            - '${FORWARD_MAILPIT_PORT:-1029}:1025'
+            - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8029}:8025'
+        networks:
+            - sail
+
+networks:
+    sail:
+        driver: bridge
+volumes:
+    sail-pgsql:
+        driver: local
+    n8n_storage:
+        driver: local

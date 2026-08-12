@@ -1,0 +1,17 @@
+{
+    "uuid": "d85a1d21-1286-4ae3-b429-2e752689ff5b",
+    "displayName": "App\\Jobs\\ProcessAiChatMessage",
+    "job": "Illuminate\\Queue\\CallQueuedHandler@call",
+    "maxTries": null,
+    "maxExceptions": null,
+    "failOnTimeout": false,
+    "backoff": null,
+    "timeout": null,
+    "retryUntil": null,
+    "data": {
+        "commandName": "App\\Jobs\\ProcessAiChatMessage",
+        "command": "O:29:\"App\\Jobs\\ProcessAiChatMessage\":2:{s:38:\"\u0000App\\Jobs\\ProcessAiChatMessage\u0000request\";a:6:{s:7:\"message\";s:12:\"adwwaadwadwa\";s:9:\"sessionId\";s:36:\"019a96c4-488f-73e8-8539-0189ac8d1fff\";s:15:\"autoErrorFixing\";b:1;s:10:\"aiProvider\";s:6:\"openai\";s:5:\"model\";s:7:\"gpt-4.1\";s:20:\"selectedDatabaseType\";s:10:\"postgresql\";}s:37:\"\u0000App\\Jobs\\ProcessAiChatMessage\u0000userId\";s:36:\"019a8816-9aea-7141-957c-8d7fd43a9035\";}"
+    },
+    "createdAt": 1763739517,
+    "delay": null
+}

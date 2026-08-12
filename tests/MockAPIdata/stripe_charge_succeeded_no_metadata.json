@@ -1,0 +1,97 @@
+{
+    "payload": {
+      "id": "evt_3SVY43E8U13QCN3Y0a9pi8Or",
+      "object": "event",
+      "api_version": "2025-04-30.basil",
+      "created": 1763645905,
+      "data": {
+        "object": {
+          "id": "py_3SVY43E8U13QCN3Y08CVK0Zw",
+          "object": "charge",
+          "amount": 694,
+          "amount_captured": 694,
+          "amount_refunded": 0,
+          "application": null,
+          "application_fee": null,
+          "application_fee_amount": null,
+          "balance_transaction": "txn_3SVY43E8U13QCN3Y08FTjPij",
+          "billing_details": {
+            "address": {
+              "city": null,
+              "country": "UZ",
+              "line1": null,
+              "line2": null,
+              "postal_code": null,
+              "state": null
+            },
+            "email": "test@example.com",
+            "name": "dddd",
+            "phone": null,
+            "tax_id": null
+          },
+          "calculated_statement_descriptor": "NEW BUSINESS SANDBOX",
+          "captured": true,
+          "created": 1763645905,
+          "currency": "usd",
+          "customer": "cus_TSP1aH2eObPG1b",
+          "description": null,
+          "destination": null,
+          "dispute": null,
+          "disputed": false,
+          "failure_balance_transaction": null,
+          "failure_code": null,
+          "failure_message": null,
+          "fraud_details": [],
+          "livemode": false,
+          "metadata": [],
+          "on_behalf_of": null,
+          "order": null,
+          "outcome": {
+            "advice_code": null,
+            "network_advice_code": null,
+            "network_decline_code": null,
+            "network_status": "approved_by_network",
+            "reason": null,
+            "risk_level": "normal",
+            "risk_score": 1,
+            "seller_message": "Payment complete.",
+            "type": "authorized"
+          },
+          "paid": true,
+          "payment_intent": "pi_3SVY43E8U13QCN3Y0TDDMm7k",
+          "payment_method": "pm_1SVY41E8U13QCN3YkrfVjLVV",
+          "payment_method_details": {
+            "link": {
+              "country": "US"
+            },
+            "type": "link"
+          },
+          "presentment_details": {
+            "presentment_amount": 8600424,
+            "presentment_currency": "uzs"
+          },
+          "radar_options": [],
+          "receipt_email": null,
+          "receipt_number": null,
+          "receipt_url": "https://pay.stripe.com/receipts/payment/CAcaFwoVYWNjdF8xUlFYY2FFOFUxM1FDTjNZKNKz_MgGMgbl12dUViQ6LBY7Vly2bfXIojOCtSBpXtN0a2hVG8IAIOEzti7KMx637u8WlujCzthe2mlN",
+          "refunded": false,
+          "review": null,
+          "shipping": null,
+          "source": null,
+          "source_transfer": null,
+          "statement_descriptor": null,
+          "statement_descriptor_suffix": null,
+          "status": "succeeded",
+          "transfer_data": null,
+          "transfer_group": null
+        }
+      },
+      "livemode": false,
+      "pending_webhooks": 2,
+      "request": {
+        "id": null,
+        "idempotency_key": "88655cc3-6f6f-46ec-ab78-042fed0945e0"
+      },
+      "type": "charge.succeeded"
+    }
+  }

@@ -1,0 +1,256 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "authentication": "basicAuth",
+        "initialMessages": "",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -9376,
+        -2000
+      ],
+      "id": "a0ae095a-bff3-46f6-928c-eef07ccc6e53",
+      "name": "When chat message received",
+      "webhookId": "a774d695-0979-45e2-9643-5682739c7457",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "NwLxFGTewidjRoQm",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -9024,
+        -1744
+      ],
+      "id": "e22d6c05-e310-4317-9a9d-2583bbc8442d",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "83uB1dBkFZbEg8eq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -8944,
+        -2000
+      ],
+      "id": "d8d5fa82-c7b3-463a-aa9e-3595a398c1f9",
+      "name": "AI Agent",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 8
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -8768,
+        -1712
+      ],
+      "id": "fbfafe96-b141-47de-b472-5e6b5ec985c1",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "oI2BrIzYZb9mX5d8",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "43690d80-0071-4472-9a03-f5f7c5a9332c",
+              "name": "output",
+              "value": "=[\n  {\n    \"ui_type\": \"text\",\n    \"title\": \"Assistant advice\",\n    \"description\": \"AI-generated explanation or recommendation\",\n    \"data\": {\n      \"content\": \"I prepared a dataset summary, a revenue trend chart, a regional pie chart, and a Mermaid diagram describing the system flow.\"\n    }\n  },\n  {\n    \"ui_type\": \"table\",\n    \"title\": \"Statistics\",\n    \"description\": \"Statistics by country\",\n    \"data\": {\n      \"columns\": [\n        {\n          \"key\": \"country\",\n          \"label\": \"Country\"\n        },\n        {\n          \"key\": \"users\",\n          \"label\": \"Users\"\n        },\n        {\n          \"key\": \"revenue\",\n          \"label\": \"Revenue ($)\"\n        },\n        {\n          \"key\": \"growth\",\n          \"label\": \"Growth %\"\n        }\n      ],\n      \"rows\": [\n        {\n          \"country\": \"United States\",\n          \"users\": 12500,\n          \"revenue\": 48000,\n          \"growth\": 12.4\n        },\n        {\n          \"country\": \"Germany\",\n          \"users\": 8300,\n          \"revenue\": 31000,\n          \"growth\": 9.1\n        },\n        {\n          \"country\": \"India\",\n          \"users\": 21400,\n          \"revenue\": 22000,\n          \"growth\": 18.7\n        }\n      ]\n    }\n  },\n  {\n    \"ui_type\": \"stacked-area-chart\",\n    \"title\": \"Traffic Trend\",\n    \"description\": \"Weekly Traffic Trend\",\n    \"data\": {\n      \"x_axis\": {\n        \"values\": [\"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\", \"Sun\"]\n      },\n      \"series\": [\n        {\n          \"name\": \"Email\",\n          \"data\": [\n            120,\n            132,\n            101,\n            134,\n            90,\n            230,\n            210\n          ]\n        },\n        {\n          \"name\": \"Union Ads\",\n          \"data\": [\n            220,\n            182,\n            191,\n            234,\n            290,\n            330,\n            310\n          ]\n        },\n        {\n          \"name\": \"Video Ads\",\n          \"data\": [\n            150,\n            232,\n            201,\n            154,\n            190,\n            330,\n            410\n          ]\n        },\n        {\n          \"name\": \"Direct\",\n          \"data\": [\n            320,\n            332,\n            301,\n            334,\n            390,\n            330,\n            320\n          ]\n        },\n        {\n          \"name\": \"Search Engine\",\n          \"data\": [\n            820,\n            932,\n            901,\n            934,\n            1290,\n            1330,\n            1320\n          ]\n        }\n      ]\n    }\n  },\n  {\n    \"ui_type\": \"line-chart\",\n    \"title\": \"Product Sales Trend\",\n    \"description\": \"Annual sales by product (2012–2017)\",\n    \"data\": {\n      \"x_axis\": {\n        \"values\": [\n          \"2012\",\n          \"2013\",\n          \"2014\",\n          \"2015\",\n          \"2016\",\n          \"2017\"\n        ]\n      },\n      \"series\": [\n        {\n          \"name\": \"Milk Tea\",\n          \"data\": [\n            56.5,\n            82.1,\n            88.7,\n            70.1,\n            53.4,\n            85.1\n          ]\n        },\n        {\n          \"name\": \"Matcha Latte\",\n          \"data\": [\n            51.1,\n            51.4,\n            55.1,\n            53.3,\n            73.8,\n            68.7\n          ]\n        },\n        {\n          \"name\": \"Cheese Cocoa\",\n          \"data\": [\n            40.1,\n            62.2,\n            69.5,\n            36.4,\n            45.2,\n            32.5\n          ]\n        },\n        {\n          \"name\": \"Walnut Brownie\",\n          \"data\": [\n            25.2,\n            37.1,\n            41.2,\n            18,\n            33.9,\n            49.1\n          ]\n        }\n      ]\n    }\n  },\n  {\n    \"ui_type\": \"pie_chart\",\n    \"title\": \"Web Traffic Pie Chart\",\n    \"data\": {\n      \"series\":\n        [\n            {\n              \"name\": \"Search Engine\",\n              \"value\": 1048\n            },\n            {\n              \"name\": \"Direct\",\n              \"value\": 735\n            },\n            {\n              \"name\": \"Email\",\n              \"value\": 580\n            },\n            {\n              \"name\": \"Union Ads\",\n              \"value\": 484\n            },\n            {\n              \"name\": \"Video Ads\",\n              \"value\": 300\n            }\n       ]\n    }\n  },\n  {\n    \"ui_type\": \"mermaid\",\n    \"title\": \"System Flow\",\n    \"description\": \"Mermaid flowchart: how data moves between services\",\n    \"data\": {\n      \"syntax\": {{ JSON.stringify($json.mermaid) }}\n    }\n  },\n  {\n    \"ui_type\": \"code_editor\",\n    \"title\": \"Example: Laravel Controller snippet\",\n    \"description\": \"Returning UI blocks from backend\",\n    \"data\": {\n      \"language\": \"php\",\n      \"filename\": \"ChatController.php\",\n      \"highlight_lines\": [\n        5,\n        6,\n        7\n      ],\n      \"code\": \"<?php\\n\\nreturn response()->json([\\n  'blocks' => $uiBlocks,\\n]);\\n\"\n    }\n  },\n  {\n    \"ui_type\": \"dynamic_tables\",\n    \"title\": \"Detailed Breakdown\",\n    \"description\": \"Three related datasets for deeper analysis\",\n    \"data\": {\n      \"tables\": [\n        {\n          \"table_id\": \"users_by_plan\",\n          \"title\": \"Users by Plan\",\n          \"columns\": [\n            {\n              \"key\": \"plan\",\n              \"label\": \"Plan\"\n            },\n            {\n              \"key\": \"users\",\n              \"label\": \"Users\"\n            }\n          ],\n          \"rows\": [\n            {\n              \"plan\": \"Free\",\n              \"users\": 15400\n            },\n            {\n              \"plan\": \"Pro\",\n              \"users\": 5200\n            },\n            {\n              \"plan\": \"Enterprise\",\n              \"users\": 1600\n            }\n          ]\n        },\n        {\n          \"table_id\": \"revenue_by_region\",\n          \"title\": \"Revenue by Region\",\n          \"columns\": [\n            {\n              \"key\": \"region\",\n              \"label\": \"Region\"\n            },\n            {\n              \"key\": \"revenue\",\n              \"label\": \"Revenue ($)\"\n            }\n          ],\n          \"rows\": [\n            {\n              \"region\": \"North America\",\n              \"revenue\": 52000\n            },\n            {\n              \"region\": \"Europe\",\n              \"revenue\": 39000\n            },\n            {\n              \"region\": \"Asia\",\n              \"revenue\": 28000\n            }\n          ]\n        },\n        {\n          \"table_id\": \"top_customers\",\n          \"title\": \"Top Customers\",\n          \"columns\": [\n            {\n              \"key\": \"company\",\n              \"label\": \"Company\"\n            },\n            {\n              \"key\": \"country\",\n              \"label\": \"Country\"\n            },\n            {\n              \"key\": \"spend\",\n              \"label\": \"Annual Spend ($)\"\n            }\n          ],\n          \"rows\": [\n            {\n              \"company\": \"Acme Corp\",\n              \"country\": \"USA\",\n              \"spend\": 12000\n            },\n            {\n              \"company\": \"NordSoft\",\n              \"country\": \"Germany\",\n              \"spend\": 9400\n            },\n            {\n              \"company\": \"ZenData\",\n              \"country\": \"India\",\n              \"spend\": 8700\n            }\n          ]\n        }\n      ]\n    }\n  }\n]",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -8176,
+        -2000
+      ],
+      "id": "b54c01d5-608a-4896-8140-e96a8f543efe",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -9168,
+        -2000
+      ],
+      "id": "2b82d28c-f2d7-4504-9be8-93ec7b45af96",
+      "name": "variablesStorage"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  mermaid: `\nflowchart LR\n  U[User] -->|Prompt / Click| UI[Web UI]\n  UI -->|POST /chat| API[Laravel API]\n  API -->|Webhook trigger| N8N[n8n Workflow]\n  N8N -->|Generate UI blocks| LLM[LLM]\n  N8N -->|Read/Write context| DB[(Database)]\n  N8N -->|Return UI response| API\n  API -->|Render blocks| UI\n`\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -8400,
+        -2000
+      ],
+      "id": "1cb7da00-f002-45a1-8cf8-11858ad4071d",
+      "name": "MermaidString"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -8576,
+        -2000
+      ],
+      "id": "b5067c4c-76ba-4870-99af-679e51da5f56",
+      "name": "Sheet",
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "variablesStorage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "variablesStorage": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    },
+    "MermaidString": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheet": {
+      "main": [
+        [
+          {
+            "node": "MermaidString",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a4e28d41-cbf5-4f1d-9011-05714fe37bf7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "19913a84900f9b88ddcccf4553712f936b55b2d18beface1f82200225e79ff87"
+  },
+  "id": "BgrxD55W9rb4ffu5",
+  "tags": []
+}

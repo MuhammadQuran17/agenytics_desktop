@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "laravel-boost": {
+      "command": "./vendor/bin/sail",
+      "args": [
+        "php",
+        "artisan",
+        "boost:mcp"
+      ]
+    },
+    "Ref": {
+      "type": "streamable-http",
+      "url": "https://api.ref.tools/mcp?apiKey=ref-3f35e5fd795d8b8de436",
+      "headers": {}
+    },
+    "deepwiki": {
+      "url": "https://mcp.deepwiki.com/sse"
+    },
+    "github": {
+      "type": "streamable-http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer FILL_IT_WITH_YOUR_VALUE"
+      },
+      "disabled": true,
+      "alwaysAllow": []
+    }
+  }
+}

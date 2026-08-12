@@ -1,0 +1,59 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Feedback;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Feedback>
+ */
+class FeedbackFactory extends Factory
+{
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'user_id' => User::factory(),
+            'title' => fake()->sentence(),
+            'description' => fake()->paragraph(),
+            'status' => fake()->randomElement(['planned', 'in_progress', 'completed', 'closed']),
+            'tags' => fake()->randomElements(['bug', 'feature', 'enhancement', 'documentation', 'performance'], fake()->numberBetween(0, 3)),
+        ];
+    }
+
+    /**
+     * Indicate that the feedback has a specific status.
+     */
+    public function status(string $status): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => $status,
+        ]);
+    }
+
+    /**
+     * Indicate that the feedback has specific tags.
+     */
+    public function tags(array $tags): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'tags' => $tags,
+        ]);
+    }
+
+    /**
+     * Indicate that the feedback was created at a specific time.
+     */
+    public function createdAt(\Carbon\Carbon $date): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'created_at' => $date,
+        ]);
+    }
+}

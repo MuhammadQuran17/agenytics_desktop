@@ -1,0 +1,153 @@
+{
+  "name": "Test workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -9376,
+        -2000
+      ],
+      "id": "a0ae095a-bff3-46f6-928c-eef07ccc6e53",
+      "name": "When chat message received",
+      "webhookId": "a774d695-0979-45e2-9643-5682739c7457"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -9008,
+        -1760
+      ],
+      "id": "e22d6c05-e310-4317-9a9d-2583bbc8442d",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "83uB1dBkFZbEg8eq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -8928,
+        -2000
+      ],
+      "id": "d8d5fa82-c7b3-463a-aa9e-3595a398c1f9",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -8800,
+        -1760
+      ],
+      "id": "fbfafe96-b141-47de-b472-5e6b5ec985c1",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "oI2BrIzYZb9mX5d8",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -8576,
+        -2000
+      ],
+      "id": "b54c01d5-608a-4896-8140-e96a8f543efe",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -9152,
+        -2000
+      ],
+      "id": "2b82d28c-f2d7-4504-9be8-93ec7b45af96",
+      "name": "variablesStorage"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "variablesStorage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "variablesStorage": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9e9447cc-6c25-482d-8a52-97650688a1e8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "19913a84900f9b88ddcccf4553712f936b55b2d18beface1f82200225e79ff87"
+  },
+  "id": "BgrxD55W9rb4ffu5",
+  "tags": []
+}
