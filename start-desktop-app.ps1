@@ -6,10 +6,11 @@
 #   terminal, which would otherwise make Electron boot as plain Node)
 
 $ErrorActionPreference = "Stop"
-Set-Location "c:\Users\Amirxon\ai_agent_starter_kit"
+$projectRoot = $PSScriptRoot
+Set-Location $projectRoot
 
 Remove-Item Env:\ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
-$env:PHPRC = "c:\Users\Amirxon\ai_agent_starter_kit\storage\app\nativephp-php.ini"
+$env:PHPRC = Join-Path $projectRoot "storage\app\nativephp-php.ini"
 
 $mcpRunning = Get-NetTCPConnection -LocalPort 8931 -State Listen -ErrorAction SilentlyContinue
 if (-not $mcpRunning) {
@@ -17,7 +18,7 @@ if (-not $mcpRunning) {
     $env:PLAYWRIGHT_MCP_PING_TIMEOUT_MS = "0"
     Start-Process -FilePath "node" `
         -ArgumentList "node_modules/@playwright/mcp/cli.js", "--port", "8931", "--shared-browser-context" `
-        -WorkingDirectory "c:\Users\Amirxon\ai_agent_starter_kit" `
+        -WorkingDirectory $projectRoot `
         -WindowStyle Hidden
     Start-Sleep -Seconds 2
 }

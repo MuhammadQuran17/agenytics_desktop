@@ -12,5 +12,5 @@ if ($alreadyRunning) {
 $env:PLAYWRIGHT_MCP_PING_TIMEOUT_MS = "0"
 Start-Process -FilePath "node" `
     -ArgumentList "node_modules/@playwright/mcp/cli.js", "--port", "8931", "--shared-browser-context" `
-    -WorkingDirectory "c:\Users\Amirxon\ai_agent_starter_kit" `
+    -WorkingDirectory $PSScriptRoot `
     -WindowStyle Hidden
