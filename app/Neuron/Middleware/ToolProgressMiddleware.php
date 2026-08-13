@@ -67,6 +67,13 @@ class ToolProgressMiddleware implements WorkflowMiddleware
             'browser_wait_for' => 'Waiting...',
             'browser_press_key' => 'Pressing a key...',
             'browser_take_screenshot' => 'Taking a screenshot...',
+            'browser_hover' => 'Hovering...',
+            'browser_select_option' => 'Selecting an option...',
+            'browser_drag' => 'Dragging...',
+            'browser_fill_form' => 'Filling out the form...',
+            'browser_run_code_unsafe' => 'Interacting with the page...',
+            'browser_network_requests', 'browser_network_request' => 'Checking network activity...',
+            'browser_console_messages' => 'Checking the console...',
             default => 'Using '.$toolName.'...',
         };
     }
