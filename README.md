@@ -33,6 +33,12 @@ powershell -File start-playwright-mcp-server.ps1
 - The MCP server pings its HTTP client every few seconds and closes the browser if it doesn't get an answer back. Our client doesn't answer pings, so `start-playwright-mcp-server.ps1` sets `PLAYWRIGHT_MCP_PING_TIMEOUT_MS=0` to turn that off.
 - The model has a `browser_close` tool available by default and will happily call it once it's done answering. `BrowserAgent::tools()` excludes `browser_close` and `browser_tabs` so it can't close the shared session out from under the next request.
 
+### Live progress in the chat UI
+
+While the agent is browsing, the chat shows what it's doing ("Opening youtube.com...") instead of just a spinner. This needs the chat job to actually run in the background rather than inline, so `QUEUE_CONNECTION` has to be `database` (not `sync`) — `.env.example` on this branch already sets that. `composer dev` and the desktop app both start a queue worker for you, so there's nothing extra to run.
+
+`ToolProgressMiddleware` (`app/Neuron/Middleware`) hooks into Neuron's tool-call events and writes a short description to the chat's `chat_histories` row before each tool runs; `/chat/status` returns it while the job is still processing.
+
 ## Running it locally
 
 ```bash
