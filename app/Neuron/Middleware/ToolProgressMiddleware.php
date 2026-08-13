@@ -60,21 +60,71 @@ class ToolProgressMiddleware implements WorkflowMiddleware
         return match ($toolName) {
             'browser_navigate' => 'Opening '.($inputs['url'] ?? 'the page').'...',
             'browser_navigate_back' => 'Going back...',
-            'browser_click' => 'Clicking...',
-            'browser_type' => 'Typing...',
+            'browser_click' => $this->describeClick($inputs),
+            'browser_type' => $this->describeType($inputs),
             'browser_find' => 'Searching the page...',
             'browser_snapshot' => 'Reading the page...',
             'browser_wait_for' => 'Waiting...',
             'browser_press_key' => 'Pressing a key...',
             'browser_take_screenshot' => 'Taking a screenshot...',
-            'browser_hover' => 'Hovering...',
+            'browser_hover' => 'Hovering over '.($inputs['element'] ?? 'the page').'...',
             'browser_select_option' => 'Selecting an option...',
             'browser_drag' => 'Dragging...',
             'browser_fill_form' => 'Filling out the form...',
-            'browser_run_code_unsafe' => 'Interacting with the page...',
+            'browser_run_code_unsafe' => $this->describeRunCode($inputs),
             'browser_network_requests', 'browser_network_request' => 'Checking network activity...',
             'browser_console_messages' => 'Checking the console...',
             default => 'Using '.$toolName.'...',
         };
+    }
+
+    /**
+     * @param  array<string, mixed>  $inputs
+     */
+    private function describeClick(array $inputs): string
+    {
+        $element = $inputs['element'] ?? null;
+
+        return $element ? 'Opening '.$element.'...' : 'Clicking...';
+    }
+
+    /**
+     * @param  array<string, mixed>  $inputs
+     */
+    private function describeType(array $inputs): string
+    {
+        $text = $inputs['text'] ?? null;
+
+        if ($text === null) {
+            return 'Typing...';
+        }
+
+        return ($inputs['submit'] ?? false)
+            ? "Searching for \"{$text}\"..."
+            : "Typing \"{$text}\"...";
+    }
+
+    /**
+     * The model sometimes reaches for raw Playwright code instead of the
+     * dedicated click/type tools, which have no free-text description to
+     * show. Try to pull a target name out of common Playwright locator
+     * patterns so we're not always stuck with a generic message.
+     *
+     * @param  array<string, mixed>  $inputs
+     */
+    private function describeRunCode(array $inputs): string
+    {
+        $code = $inputs['code'] ?? '';
+
+        if (preg_match('/getBy(?:Text|Role|Label|Title|Placeholder)\([^)]*name:\s*[\'"]([^\'"]+)[\'"]/', $code, $matches)
+            || preg_match('/getBy(?:Text|Label|Title|Placeholder)\([\'"]([^\'"]+)[\'"]/', $code, $matches)) {
+            return 'Interacting with "'.$matches[1].'"...';
+        }
+
+        if (str_contains($code, '.click(')) {
+            return 'Clicking...';
+        }
+
+        return 'Interacting with the page...';
     }
 }
