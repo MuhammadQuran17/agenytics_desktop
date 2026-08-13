@@ -20,11 +20,13 @@ export const useAiChatStore = defineStore('ai-chat', {
         isLoading: false,
         processingSessionIds: new Set<string>(),
         activePollingJobs: new Map<string, string>(), // sessionId -> jobId
+        progressMessages: new Map<string, string>(), // sessionId -> current tool progress text
     }
   },
   getters: {
     hasActiveChatHistory: (state) => state.currentChatHistory.length > 0,
     isSessionProcessing: (state) => (sessionId: string) => state.processingSessionIds.has(sessionId),
+    getProgressMessage: (state) => (sessionId: string) => state.progressMessages.get(sessionId),
   },
   actions: {
     setChatHistory(history: Message[]) {
@@ -43,16 +45,25 @@ export const useAiChatStore = defineStore('ai-chat', {
       this.processingSessionIds.delete(sessionId)
     },
     
+    setProgressMessage(sessionId: string, message: string | null | undefined) {
+      if (message) {
+        this.progressMessages.set(sessionId, message)
+      } else {
+        this.progressMessages.delete(sessionId)
+      }
+    },
+
     // [START] Polling job management with localStorage persistence
     startPollingForSession(sessionId: string, jobId: string) {
       this.activePollingJobs.set(sessionId, jobId)
       this.addProcessingSession(sessionId)
       this.savePollingStateToStorage()
     },
-    
+
     stopPollingForSession(sessionId: string) {
       this.activePollingJobs.delete(sessionId)
       this.removeProcessingSession(sessionId)
+      this.progressMessages.delete(sessionId)
       this.savePollingStateToStorage()
     },
     

@@ -37,6 +37,8 @@ class ProcessAiChatMessage implements ShouldQueue
 
         $user = User::findOrFail($this->userId);
 
+        $neuronAiAgent->setJobId($this->jobId);
+
         $response = $neuronAiAgent->sendMessage(
             new AiAgentSendMessageRequest($this->request),
         );
@@ -67,13 +69,15 @@ class ProcessAiChatMessage implements ShouldQueue
 
         // Save failed status to ChatHistory so frontend can detect it
         if (isset($this->request['sessionId'])) {
-            \App\Models\ChatHistory::create([
-                'user_chat_session_id' => $this->request['sessionId'],
-                'job_id' => $this->jobId,
-                'job_status' => 'failed',
-                'role' => 'assistant',
-                'error' => $exception?->getMessage().' Please try again later.' ?? 'An unexpected error occurred while processing your message. Please try again later.',
-            ]);
+            \App\Models\ChatHistory::updateOrCreate(
+                ['job_id' => $this->jobId, 'role' => 'assistant'],
+                [
+                    'user_chat_session_id' => $this->request['sessionId'],
+                    'job_status' => 'failed',
+                    'progress_message' => null,
+                    'error' => $exception?->getMessage().' Please try again later.' ?? 'An unexpected error occurred while processing your message. Please try again later.',
+                ],
+            );
         }
     }
 }

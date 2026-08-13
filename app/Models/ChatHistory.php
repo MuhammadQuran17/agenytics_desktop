@@ -17,6 +17,7 @@ class ChatHistory extends Model
         'user_input',
         'role',
         'message',
+        'progress_message',
         'error',
     ];
 

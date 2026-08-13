@@ -20,13 +20,15 @@ class AiChatHistory
 
     public function saveAssistantResponse(array $response, string $sessionId, string $jobId): void
     {
-        ChatHistory::create([
-            'user_chat_session_id' => $sessionId,
-            'job_id' => $jobId,
-            'job_status' => 'completed',
-            'role' => 'assistant',
-            'message' => Arr::get($response, 'output'),
-            'error' => Arr::get($response, 'error'),
-        ]);
+        ChatHistory::updateOrCreate(
+            ['job_id' => $jobId, 'role' => 'assistant'],
+            [
+                'user_chat_session_id' => $sessionId,
+                'job_status' => 'completed',
+                'message' => Arr::get($response, 'output'),
+                'progress_message' => null,
+                'error' => Arr::get($response, 'error'),
+            ],
+        );
     }
 }

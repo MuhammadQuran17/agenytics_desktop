@@ -13,7 +13,7 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
     
     const pollingIntervalIds = ref<Map<string, number>>(new Map());
     const pollingAttempts = ref<Map<string, number>>(new Map());
-    const maxPollingAttempts = 150; // 150 * 4 seconds = 10 minutes max
+    const maxPollingAttempts = 600; // 600 * 1 second = 10 minutes max
 
     const stopPolling = (sessionId: string) => {
         const intervalId = pollingIntervalIds.value.get(sessionId);
@@ -26,10 +26,10 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
 
     const pollJobStatus = async (sessionId: string, jobId: string) => {
         try {
-            const response = await axios.post(route('chat.status'), { 
-                jobId: String(jobId) 
+            const response = await axios.post(route('chat.status'), {
+                jobId: String(jobId)
             });
-            const { status, response: aiResponse, error } = response.data;
+            const { status, response: aiResponse, error, progress } = response.data;
 
             if (status === 'completed') {
                 stopPolling(sessionId);
@@ -47,6 +47,8 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
                 aiChatStore.stopPollingForSession(sessionId);
                 toast.error(error || 'Processing failed. Please try again.');
             } else if (status === 'processing') {
+                aiChatStore.setProgressMessage(sessionId, progress);
+
                 // Continue polling
                 const attempts = (pollingAttempts.value.get(sessionId) || 0) + 1;
                 pollingAttempts.value.set(sessionId, attempts);
@@ -73,7 +75,7 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
         
         const intervalId = window.setInterval(() => {
             pollJobStatus(sessionId, jobId);
-        }, 4000); // Poll every 4 seconds
+        }, 1000); // Poll every second, so live tool-progress text has a chance to show up
         
         pollingIntervalIds.value.set(sessionId, intervalId);
     };
