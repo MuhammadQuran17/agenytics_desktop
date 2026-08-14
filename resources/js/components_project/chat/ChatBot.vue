@@ -37,7 +37,7 @@ useScrollToMessage(messageRefs)
 // [END] Scroll to message
 
 // [START] Handle send message
-const handleSendMessage = async (message: string) => {
+const handleSendMessage = async (message: string, pdfs: File[] = []) => {
     try {
         aiChatStore.addMessage({
             content: message,
@@ -45,10 +45,12 @@ const handleSendMessage = async (message: string) => {
             created_at: new Date().toISOString(),
         });
 
-        const response = await axios.post(route('chat.send'), {
-            message,
-            sessionId: currentChatSessionId?.value,
-        });
+        const formData = new FormData();
+        formData.append('message', message);
+        formData.append('sessionId', currentChatSessionId?.value ?? '');
+        pdfs.forEach((pdf) => formData.append('pdfs[]', pdf));
+
+        const response = await axios.post(route('chat.send'), formData);
 
         const { jobId } = response.data;
 
