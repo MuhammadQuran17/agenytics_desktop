@@ -27,6 +27,8 @@ class AiAgentSendMessageRequest extends FormRequest
         return [
             'message' => 'required|string|max:300000',
             'sessionId' => 'required|string|max:255',
+            'pdfs' => 'nullable|array|max:4',
+            'pdfs.*' => 'file|mimes:pdf|max:10240',
         ];
     }
 
@@ -39,6 +41,9 @@ class AiAgentSendMessageRequest extends FormRequest
             'message.required' => 'A message is required.',
             'message.max' => 'The message cannot exceed 300,000 characters.',
             'sessionId.required' => 'A session ID is required.',
+            'pdfs.max' => 'You can attach up to 4 PDFs.',
+            'pdfs.*.mimes' => 'Attachments must be PDF files.',
+            'pdfs.*.max' => 'Each PDF must be under 10MB.',
         ];
     }
 }
