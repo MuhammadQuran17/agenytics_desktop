@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ChatHistory extends Model
 {
@@ -17,7 +18,6 @@ class ChatHistory extends Model
         'user_input',
         'role',
         'message',
-        'progress_message',
         'error',
     ];
 
@@ -31,5 +31,10 @@ class ChatHistory extends Model
     public function userChat(): BelongsTo
     {
         return $this->belongsTo(UserChat::class, 'user_chat_session_id', 'session_id');
+    }
+
+    public function steps(): HasMany
+    {
+        return $this->hasMany(ChatHistoryStep::class)->orderBy('created_at');
     }
 }

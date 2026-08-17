@@ -75,7 +75,9 @@ class ChatStatusPollingController extends Controller
     {
         return response()->json([
             'status' => 'processing',
-            'progress' => $chatHistory->role === 'assistant' ? $chatHistory->progress_message : null,
+            'steps' => $chatHistory->role === 'assistant'
+                ? $chatHistory->steps->map->only(['message', 'status'])
+                : [],
         ]);
     }
 

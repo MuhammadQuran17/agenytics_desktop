@@ -1,7 +1,7 @@
 <?php
 
-use App\Jobs\ProcessAiChatMessage;
 use App\Models\ChatHistory;
+use App\Models\ChatHistoryStep;
 use App\Models\UserChat;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -38,7 +38,7 @@ describe('Chat Status Polling', function () {
             'user_chat_session_id' => $userChat->session_id,
             'job_id' => $jobId,
             'job_status' => 'failed',
-            'role' => 'assistant'
+            'role' => 'assistant',
         ]);
 
         $response = $this->postJson(route('chat.status'), ['jobId' => $jobId]);
@@ -72,6 +72,44 @@ describe('Chat Status Polling', function () {
         $response->assertSuccessful();
         $response->assertJson([
             'status' => 'processing',
+        ]);
+    });
+
+    it('returns the ordered tool-call log for a processing assistant job', function () {
+        $user = makeUserWithPrompts(5);
+        $userChat = UserChat::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user);
+
+        $jobId = 'test-job-steps';
+
+        $chatHistory = ChatHistory::create([
+            'user_chat_session_id' => $userChat->session_id,
+            'job_id' => $jobId,
+            'job_status' => 'processing',
+            'role' => 'assistant',
+        ]);
+
+        ChatHistoryStep::create([
+            'chat_history_id' => $chatHistory->id,
+            'message' => 'Opened youtube.com',
+            'status' => 'done',
+        ]);
+        ChatHistoryStep::create([
+            'chat_history_id' => $chatHistory->id,
+            'message' => 'Searching for "music"...',
+            'status' => 'in_progress',
+        ]);
+
+        $response = $this->postJson(route('chat.status'), ['jobId' => $jobId]);
+
+        $response->assertSuccessful();
+        $response->assertJson([
+            'status' => 'processing',
+            'steps' => [
+                ['message' => 'Opened youtube.com', 'status' => 'done'],
+                ['message' => 'Searching for "music"...', 'status' => 'in_progress'],
+            ],
         ]);
     });
 

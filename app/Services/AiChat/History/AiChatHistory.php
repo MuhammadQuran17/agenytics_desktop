@@ -20,15 +20,16 @@ class AiChatHistory
 
     public function saveAssistantResponse(array $response, string $sessionId, string $jobId): void
     {
-        ChatHistory::updateOrCreate(
+        $chatHistory = ChatHistory::updateOrCreate(
             ['job_id' => $jobId, 'role' => 'assistant'],
             [
                 'user_chat_session_id' => $sessionId,
                 'job_status' => 'completed',
                 'message' => Arr::get($response, 'output'),
-                'progress_message' => null,
                 'error' => Arr::get($response, 'error'),
             ],
         );
+
+        $chatHistory->steps()->where('status', 'in_progress')->update(['status' => 'done']);
     }
 }

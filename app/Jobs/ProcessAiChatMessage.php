@@ -69,15 +69,16 @@ class ProcessAiChatMessage implements ShouldQueue
 
         // Save failed status to ChatHistory so frontend can detect it
         if (isset($this->request['sessionId'])) {
-            \App\Models\ChatHistory::updateOrCreate(
+            $chatHistory = \App\Models\ChatHistory::updateOrCreate(
                 ['job_id' => $this->jobId, 'role' => 'assistant'],
                 [
                     'user_chat_session_id' => $this->request['sessionId'],
                     'job_status' => 'failed',
-                    'progress_message' => null,
                     'error' => $exception?->getMessage().' Please try again later.' ?? 'An unexpected error occurred while processing your message. Please try again later.',
                 ],
             );
+
+            $chatHistory->steps()->where('status', 'in_progress')->update(['status' => 'done']);
         }
     }
 }

@@ -37,14 +37,20 @@ class ToolProgressMiddleware implements WorkflowMiddleware
 
         $tool = $tools[0];
 
-        ChatHistory::updateOrCreate(
+        $chatHistory = ChatHistory::updateOrCreate(
             ['job_id' => $this->jobId, 'role' => 'assistant'],
             [
                 'user_chat_session_id' => $this->sessionId,
                 'job_status' => 'processing',
-                'progress_message' => $this->describe($tool->getName(), $tool->getInputs()),
             ],
         );
+
+        $chatHistory->steps()->where('status', 'in_progress')->update(['status' => 'done']);
+
+        $chatHistory->steps()->create([
+            'message' => $this->describe($tool->getName(), $tool->getInputs()),
+            'status' => 'in_progress',
+        ]);
     }
 
     public function after(NodeInterface $node, Event $result, WorkflowState $state): void

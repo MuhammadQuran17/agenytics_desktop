@@ -29,7 +29,7 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
             const response = await axios.post(route('chat.status'), {
                 jobId: String(jobId)
             });
-            const { status, response: aiResponse, error, progress } = response.data;
+            const { status, response: aiResponse, error, steps } = response.data;
 
             if (status === 'completed') {
                 stopPolling(sessionId);
@@ -47,7 +47,7 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
                 aiChatStore.stopPollingForSession(sessionId);
                 toast.error(error || 'Processing failed. Please try again.');
             } else if (status === 'processing') {
-                aiChatStore.setProgressMessage(sessionId, progress);
+                aiChatStore.setProgressSteps(sessionId, steps);
 
                 // Continue polling
                 const attempts = (pollingAttempts.value.get(sessionId) || 0) + 1;

@@ -30,7 +30,7 @@ const aiChatStore = useAiChatStore();
 const messages = computed(() => aiChatStore.currentChatHistory);
 const hasActiveChatHistory = computed(() => aiChatStore.hasActiveChatHistory);
 const isLoading = computed(() => currentChatSessionId?.value ? aiChatStore.isSessionProcessing(currentChatSessionId.value) : false);
-const progressMessage = computed(() => currentChatSessionId?.value ? aiChatStore.getProgressMessage(currentChatSessionId.value) : undefined);
+const progressSteps = computed(() => currentChatSessionId?.value ? aiChatStore.getProgressSteps(currentChatSessionId.value) : []);
 
 // [START] Scroll to message
 useScrollToMessage(messageRefs)
@@ -162,7 +162,7 @@ const isUiBlockMessage = (message: any): boolean => {
                         </div>
                     </template>
 
-                    <ChatMessageLoading v-if="isLoading" :message="progressMessage" />
+                    <ChatMessageLoading v-if="isLoading" :steps="progressSteps" />
                 </template>
 
             </div>

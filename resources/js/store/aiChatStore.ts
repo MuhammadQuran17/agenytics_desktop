@@ -6,6 +6,11 @@ interface PollingJob {
   timestamp: number
 }
 
+export interface ProgressStep {
+  message: string
+  status: 'in_progress' | 'done'
+}
+
 interface PollingState {
   [sessionId: string]: PollingJob
 }
@@ -20,13 +25,13 @@ export const useAiChatStore = defineStore('ai-chat', {
         isLoading: false,
         processingSessionIds: new Set<string>(),
         activePollingJobs: new Map<string, string>(), // sessionId -> jobId
-        progressMessages: new Map<string, string>(), // sessionId -> current tool progress text
+        progressSteps: new Map<string, ProgressStep[]>(), // sessionId -> ordered tool-call log
     }
   },
   getters: {
     hasActiveChatHistory: (state) => state.currentChatHistory.length > 0,
     isSessionProcessing: (state) => (sessionId: string) => state.processingSessionIds.has(sessionId),
-    getProgressMessage: (state) => (sessionId: string) => state.progressMessages.get(sessionId),
+    getProgressSteps: (state) => (sessionId: string) => state.progressSteps.get(sessionId) ?? [],
   },
   actions: {
     setChatHistory(history: Message[]) {
@@ -45,11 +50,11 @@ export const useAiChatStore = defineStore('ai-chat', {
       this.processingSessionIds.delete(sessionId)
     },
     
-    setProgressMessage(sessionId: string, message: string | null | undefined) {
-      if (message) {
-        this.progressMessages.set(sessionId, message)
+    setProgressSteps(sessionId: string, steps: ProgressStep[] | null | undefined) {
+      if (steps && steps.length > 0) {
+        this.progressSteps.set(sessionId, steps)
       } else {
-        this.progressMessages.delete(sessionId)
+        this.progressSteps.delete(sessionId)
       }
     },
 
@@ -63,7 +68,7 @@ export const useAiChatStore = defineStore('ai-chat', {
     stopPollingForSession(sessionId: string) {
       this.activePollingJobs.delete(sessionId)
       this.removeProcessingSession(sessionId)
-      this.progressMessages.delete(sessionId)
+      this.progressSteps.delete(sessionId)
       this.savePollingStateToStorage()
     },
     
