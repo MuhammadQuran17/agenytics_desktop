@@ -6,6 +6,7 @@ import axios from 'axios';
 import ChatInput from '@/components_project/chat/ChatInput.vue';
 import { useAiChatStore } from '@/store/aiChatStore';
 import { toast } from 'vue-sonner';
+import { Check } from 'lucide-vue-next';
 import ChatMessageLoading from '@/components_project/chat/ChatMessageLoading.vue';
 import { marked } from 'marked';
 import { useChatPolling } from '@/composables/useChatPolling';
@@ -133,17 +134,30 @@ const isUiBlockMessage = (message: any): boolean => {
                             class="mb-16 max-w-full"
                             :ref="(el: any) => { if (el) messageRefs[index] = el as HTMLElement }"
                         >
+                            <!-- Tool-call log recorded while this answer was produced -->
+                            <details v-if="message.steps && message.steps.length" class="mb-4 text-sm text-muted-foreground">
+                                <summary class="cursor-pointer select-none w-fit">Steps taken ({{ message.steps.length }})</summary>
+                                <div class="space-y-1.5 mt-2">
+                                    <div v-for="(step, stepIndex) in message.steps" :key="stepIndex" class="flex items-center gap-2">
+                                        <span class="flex h-4 w-4 items-center justify-center shrink-0">
+                                            <Check class="h-3.5 w-3.5" />
+                                        </span>
+                                        <span>{{ step.message }}</span>
+                                    </div>
+                                </div>
+                            </details>
+
                             <!-- UI Blocks Strategy Pattern -->
                             <div v-if="isUiBlockMessage(message)" class="ui-blocks-container">
-                                <UiBlockWrapper 
-                                    v-for="(block, blockIndex) in parseUiBlocks(message.content)" 
+                                <UiBlockWrapper
+                                    v-for="(block, blockIndex) in parseUiBlocks(message.content)"
                                     :key="blockIndex"
                                     :block="block"
                                 />
                             </div>
 
                             <!-- Fallback to Markdown rendering -->
-                            <div 
+                            <div
                                 v-else
                                 class="markdown-content"
                                 v-html="message.content && marked.parse(message.content as string)"

@@ -25,7 +25,7 @@ class AiChatController extends Controller
 
         // Get chat history and transform to DTO for frontend
         $chatHistory = ChatMessageDTO::fromCollection(
-            $currentChat->chatHistories()->orderBy('created_at')->get()
+            $currentChat->chatHistories()->with('steps')->orderBy('created_at')->get()
         );
 
         return Inertia::render('AiChat', [

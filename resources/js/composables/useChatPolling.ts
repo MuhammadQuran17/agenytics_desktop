@@ -40,6 +40,7 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
                         content: aiResponse,
                         role: 'assistant',
                         created_at: new Date().toISOString(),
+                        steps,
                     });
                 }
             } else if (status === 'failed') {

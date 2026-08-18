@@ -58,6 +58,7 @@ class ChatStatusPollingController extends Controller
         return response()->json([
             'status' => 'completed',
             'response' => ChatMessageDTO::fromModel($chatHistory)['content'],
+            'steps' => $chatHistory->steps->map->only(['message', 'status']),
         ]);
     }
 

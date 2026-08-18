@@ -7,7 +7,6 @@ use Illuminate\Support\Collection;
 
 class ChatMessageDTO
 {
-
     /**
      * Transform a ChatHistory model to a Message DTO for frontend consumption
      */
@@ -25,6 +24,7 @@ class ChatMessageDTO
             'content' => $message->message,
             'role' => 'assistant',
             'created_at' => $message->created_at->toIso8601String(),
+            'steps' => $message->steps->map->only(['message', 'status'])->all(),
         ];
     }
 
