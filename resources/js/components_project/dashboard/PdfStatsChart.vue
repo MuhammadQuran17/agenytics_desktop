@@ -15,6 +15,8 @@ const FAILED_COLOR = '#d03b3b';
 
 const props = defineProps<{
     labels: string[];
+    fullLabels: string[];
+    currentIndex: number;
     success: number[];
     failed: number[];
 }>();
@@ -59,13 +61,31 @@ const option = computed(() => {
         tooltip: {
             trigger: 'axis',
             axisPointer: { type: 'shadow' },
+            formatter: (params: Array<{ dataIndex: number; marker: string; seriesName: string; value: number }>) => {
+                if (params.length === 0) {
+                    return '';
+                }
+
+                const header = props.fullLabels[params[0].dataIndex] ?? props.labels[params[0].dataIndex];
+                const rows = params.map((p) => `${p.marker} ${p.seriesName}: <strong>${p.value}</strong>`).join('<br/>');
+
+                return `<div style="font-weight:600;margin-bottom:4px;">${header}</div>${rows}`;
+            },
         },
         xAxis: {
             type: 'category',
             data: props.labels,
             axisTick: { alignWithLabel: true },
             axisLine: { lineStyle: { color: border } },
-            axisLabel: { color: mutedForeground },
+            axisLabel: {
+                color: mutedForeground,
+                rich: { current: { color: foreground, fontWeight: 700 } },
+                formatter: (value: string, index: number) => (index === props.currentIndex ? `{current|${value}}` : value),
+                // A custom formatter makes ECharts' automatic label-thinning
+                // unreliable, and "Today" is the one label that must never
+                // be the one it drops — so pick the thinning step ourselves.
+                interval: (index: number) => index === props.currentIndex || index % (props.labels.length > 6 ? 2 : 1) === 0,
+            },
         },
         yAxis: {
             type: 'value',

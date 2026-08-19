@@ -6,6 +6,8 @@ export interface PdfUploadRecord {
 
 export interface PdfStats {
     labels: string[];
+    fullLabels: string[];
+    currentIndex: number;
     success: number[];
     failed: number[];
     uploads: PdfUploadRecord[];

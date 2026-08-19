@@ -69,4 +69,34 @@ describe('Dashboard - pdf stats endpoint', function () {
 
         expect($response->json('uploads'))->toBe([]);
     });
+
+    it('labels the current bucket relative to today instead of a raw date', function () {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->getJson(route('dashboard.pdf-stats', ['period' => 'day']));
+        $json = $response->json();
+        expect($json['labels'][$json['currentIndex']])->toBe('Today');
+
+        $response = $this->actingAs($user)->getJson(route('dashboard.pdf-stats', ['period' => 'week']));
+        $json = $response->json();
+        expect($json['labels'][$json['currentIndex']])->toBe('This week');
+
+        $response = $this->actingAs($user)->getJson(route('dashboard.pdf-stats', ['period' => 'month']));
+        $json = $response->json();
+        expect($json['labels'][$json['currentIndex']])->toBe('This month');
+
+        $response = $this->actingAs($user)->getJson(route('dashboard.pdf-stats', ['period' => 'year']));
+        $json = $response->json();
+        expect($json['labels'][$json['currentIndex']])->toBe('This year');
+    });
+
+    it('always keeps the current bucket last and provides a full date label for it', function () {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->getJson(route('dashboard.pdf-stats', ['period' => 'day']));
+        $json = $response->json();
+
+        expect($json['currentIndex'])->toBe(count($json['labels']) - 1)
+            ->and($json['fullLabels'][$json['currentIndex']])->toBe(now()->format('D, M j'));
+    });
 });

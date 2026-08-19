@@ -21,7 +21,17 @@ class PdfStatsAggregator
     ];
 
     /**
-     * @return array{labels: array<int, string>, success: array<int, int>, failed: array<int, int>, uploads: Collection}
+     * @var array<string, string>
+     */
+    private const CURRENT_LABEL = [
+        'day' => 'Today',
+        'week' => 'This week',
+        'month' => 'This month',
+        'year' => 'This year',
+    ];
+
+    /**
+     * @return array{labels: array<int, string>, fullLabels: array<int, string>, currentIndex: int, success: array<int, int>, failed: array<int, int>, uploads: Collection}
      */
     public function forUser(string $userId, string $period): array
     {
@@ -47,6 +57,8 @@ class PdfStatsAggregator
 
         return [
             'labels' => $buckets->pluck('label')->all(),
+            'fullLabels' => $buckets->pluck('fullLabel')->all(),
+            'currentIndex' => $buckets->count() - 1,
             'success' => $buckets->pluck('success')->all(),
             'failed' => $buckets->pluck('failed')->all(),
             'uploads' => $uploads->map(fn (PdfUpload $upload) => [
@@ -58,7 +70,7 @@ class PdfStatsAggregator
     }
 
     /**
-     * @return Collection<int, array{start: Carbon, end: Carbon, label: string}>
+     * @return Collection<int, array{start: Carbon, end: Carbon, label: string, fullLabel: string}>
      */
     private function buildBuckets(string $unit, int $count): Collection
     {
@@ -77,14 +89,23 @@ class PdfStatsAggregator
                 'year' => $start->copy()->endOfYear(),
             };
 
-            $label = match ($unit) {
+            $fullLabel = match ($unit) {
+                'day' => $start->format('D, M j'),
+                'week' => 'Week of '.$start->format('M j'),
+                'month' => $start->format('F Y'),
+                'year' => $start->format('Y'),
+            };
+
+            // The most recent bucket is always "now" — name it relative to
+            // today instead of making the reader work out which date that is.
+            $label = $offset === 0 ? self::CURRENT_LABEL[$unit] : match ($unit) {
                 'day' => $start->format('M j'),
                 'week' => $start->format('M j'),
                 'month' => $start->format('M Y'),
                 'year' => $start->format('Y'),
             };
 
-            return ['start' => $start, 'end' => $end, 'label' => $label];
+            return ['start' => $start, 'end' => $end, 'label' => $label, 'fullLabel' => $fullLabel];
         });
     }
 }

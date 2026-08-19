@@ -110,7 +110,13 @@ const formatDate = (isoDate: string): string => {
                     <CardTitle>PDF processing over time</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <PdfStatsChart :labels="stats.labels" :success="stats.success" :failed="stats.failed" />
+                    <PdfStatsChart
+                        :labels="stats.labels"
+                        :full-labels="stats.fullLabels"
+                        :current-index="stats.currentIndex"
+                        :success="stats.success"
+                        :failed="stats.failed"
+                    />
                 </CardContent>
             </Card>
 
