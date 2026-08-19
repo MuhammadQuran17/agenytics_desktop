@@ -4,6 +4,7 @@ use App\Http\Controllers\AiChat\AiChatController;
 use App\Http\Controllers\AiChat\Api\ChatStatusPollingController;
 use App\Http\Controllers\AiChat\Api\SendMessageToAiController;
 use App\Http\Controllers\ApiKey\ApiKeyController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -32,7 +33,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/{userChat?}', [AiChatController::class, 'index'])->name('index');
     });
 
-    Route::redirect('dashboard', 'chat')->name('dashboard');
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/pdf-stats', [DashboardController::class, 'pdfStats'])->name('dashboard.pdf-stats');
+    });
 
     // API Key Management
     Route::prefix('api-keys')->name('api-keys.')->group(function () {
