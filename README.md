@@ -8,6 +8,60 @@
 
 This is a fork of [Agenytics](https://github.com/MuhammadQuran17/agenytics) (Laravel + Inertia + Vue). Two things changed from the original starter kit: the chat no longer talks to n8n, it talks to Google Gemini directly through the [Neuron AI](https://neuron-ai.dev/) PHP framework, and the app runs as a Windows desktop app via [NativePHP](https://nativephp.com/), not just in a browser. Stripe billing and the Feedback/Roadmap module got removed too — didn't need them here.
 
+## Quick start — running the desktop app
+
+Just want the app open on your machine? Do these in order, nothing else.
+
+**0. Install first, if you don't have them:** [PHP 8.4+](https://windows.php.net/download/), [Composer](https://getcomposer.org/download/), [Node.js 20+](https://nodejs.org/), Git.
+
+**1. Get the code and install everything:**
+```bash
+git clone <this-repo-url>
+cd ai_agent_starter_kit
+composer install
+npm install
+```
+
+**2. Create your `.env` file:**
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+**3. Add a Gemini API key.** Open `.env`, find these lines, and fill in your key ([get one free here](https://aistudio.google.com/apikey)):
+```
+GEMINI_KEY=your-key-from-aistudio.google.com/apikey
+```
+(No key yet? Set `IS_FAKE_RESPONSES_ENABLED=true` instead and the app will use fake responses so you can still click around.)
+
+**4. Create the database:**
+```bash
+touch database/database.sqlite
+php artisan migrate
+```
+
+**5. Install the browser the AI will use:**
+```bash
+npx playwright install chromium
+```
+
+**6. Start the browser-automation server** (do this every time, before step 7 — the app talks to it over `localhost:8931`):
+```bash
+powershell -File start-playwright-mcp-server.ps1
+```
+
+**7. Open the app.** Pick one:
+```bash
+composer native:dev   # opens as a desktop window (Electron)
+composer dev           # opens in your browser at http://localhost:8000
+```
+
+That's it — the chat should be working. Want to build a shareable `.exe` installer instead of just running it locally? See [Running it as a desktop app](#running-it-as-a-desktop-app) below.
+
+---
+
+The rest of this README explains *how* the app works internally — useful if you're changing code, not required just to run it.
+
 ## AI chat
 
 The chat job (`ProcessAiChatMessage`) calls `NeuronAiAgent`, which just hands the message off to a Neuron `Agent` class (`app/Neuron/Agents/BrowserAgent.php`) set up with Gemini as the provider. The response comes back wrapped in the same block format the UI already expects (text, table, chart, mermaid, etc.) — see `config/ai_responses.php` for what that looks like.
@@ -16,18 +70,9 @@ This branch also gives the agent real browser access through [Playwright MCP](ht
 
 ### Setting up browser access
 
-```bash
-npm install
-npx playwright install chromium
-```
+Setup is covered in [Quick start](#quick-start--running-the-desktop-app) (steps 5–6: install Chromium, start `start-playwright-mcp-server.ps1`). The rest of this section is *why* it's built that way, not more setup steps.
 
-The agent doesn't spawn a browser per request — it talks to one persistent Playwright MCP server over HTTP, so the browser stays open across chat messages instead of closing after each answer. Start it once:
-
-```bash
-powershell -File start-playwright-mcp-server.ps1
-```
-
-(or just run `start-desktop-app.ps1` for the desktop app — it starts the MCP server itself if it isn't already running)
+The agent doesn't spawn a browser per request — it talks to one persistent Playwright MCP server over HTTP, so the browser stays open across chat messages instead of closing after each answer. (Running the desktop app instead? `start-desktop-app.ps1` starts the MCP server itself if it isn't already running.)
 
 `BrowserAgent` connects to it at `PLAYWRIGHT_MCP_URL` (defaults to `http://localhost:8931/mcp`, see `config/services.php`). Two things had to be handled to make the persistent-browser part actually work:
 - The MCP server pings its HTTP client every few seconds and closes the browser if it doesn't get an answer back. Our client doesn't answer pings, so `start-playwright-mcp-server.ps1` sets `PLAYWRIGHT_MCP_PING_TIMEOUT_MS=0` to turn that off.
@@ -63,43 +108,17 @@ While the agent is browsing, the chat shows what it's doing ("Opening youtube.co
 
 ## Running it locally
 
-```bash
-composer install
-npm install
-cp .env.example .env
-php artisan key:generate
-touch database/database.sqlite
-php artisan migrate
-```
-
-Add to `.env`:
-
-```
-NEURON_AI_PROVIDER=gemini
-GEMINI_KEY=your-key-from-aistudio.google.com/apikey
-GEMINI_MODEL=gemini-flash-latest
-IS_FAKE_RESPONSES_ENABLED=false
-```
-
-(leave `IS_FAKE_RESPONSES_ENABLED=true` if you just want to click around without a Gemini key)
-
-```bash
-composer dev
-```
-
-That starts the server, queue, logs and Vite together — go to `http://localhost:8000`.
+Setup steps are all in [Quick start](#quick-start--running-the-desktop-app) above. Once that's done, `composer dev` (browser, `http://localhost:8000`) and `composer native:dev` (Electron window) both start the server, queue, logs and Vite together — pick whichever you're testing.
 
 ## Running it as a desktop app
 
-```bash
-composer native:dev
-```
-
-Same app, opens in an Electron window instead of the browser. For an actual installer:
+For everyday running, `composer native:dev` from Quick start is all you need. To build a real, shareable installer:
 
 ```bash
 php artisan native:build win
 ```
+
+That produces `nativephp/electron/dist/Agenytics-x.x.x-setup.exe`.
 
 Ran into two Windows-only issues getting this working, noting them here in case someone else hits the same thing:
 - Electron would crash on boot with a weird `BrowserWindow` export error — turned out to be `ELECTRON_RUN_AS_NODE` being set in the environment (VS Code's terminal does this), which makes Electron run as plain Node instead of itself.
