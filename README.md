@@ -37,11 +37,11 @@ powershell -File start-playwright-mcp-server.ps1
 
 MCP (Model Context Protocol) always has two separate sides talking over a wire — a **server** that exposes tools, and a **client** that calls them. It's easy to assume both live in the same place because they're both "the MCP stuff," but here they're in two different languages, two different processes, two different dependency managers:
 
-- **Server — `@playwright/mcp` (Node.js, npm, `devDependencies`).** This is Microsoft's own package. It drives a real Chromium instance and exposes that as MCP tools (`browser_navigate`, `browser_click`, `browser_type`, ...). We run it ourselves as a long-lived process:
+- **Server — `@playwright/mcp` (Node.js, npm, `dependencies`).** This is Microsoft's own package. It drives a real Chromium instance and exposes that as MCP tools (`browser_navigate`, `browser_click`, `browser_type`, ...). We run it ourselves as a long-lived process:
   ```
   node node_modules/@playwright/mcp/cli.js --port 8931 --shared-browser-context
   ```
-  That's it — a plain HTTP server on `localhost:8931`, nothing Laravel- or Electron-specific about it. It sits in `devDependencies` because nothing in the build pipeline ever ships it: `native:build` packages the Electron shell, not this repo's `node_modules`, so the desktop `.exe` never contains it either way. Practically that means the dev/prod split doesn't change anything today, but it's still the "wrong" section for a package the app depends on at runtime rather than only at build/lint time — worth moving to `dependencies` if this ever gets bundled or npm-pruned somewhere.
+  That's it — a plain HTTP server on `localhost:8931`, nothing Laravel- or Electron-specific about it. It lives in `dependencies`, not `devDependencies`: the app needs it running at runtime for browsing to work at all, even though `native:build` doesn't currently bundle this repo's `node_modules` into the desktop `.exe` either way (so today the split has no build-pipeline effect) — `dependencies` is still the honest place for it, and the one that keeps working if that ever changes or something starts npm-pruning dev packages.
 
 - **Client — `NeuronAI\MCP\McpConnector` (PHP, Composer, `neuron-core/neuron-laravel`).** This is what `BrowserAgent::tools()` uses:
   ```php
