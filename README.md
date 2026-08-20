@@ -112,15 +112,58 @@ Setup steps are all in [Quick start](#quick-start--running-the-desktop-app) abov
 
 ## Running it as a desktop app
 
-For everyday running, `composer native:dev` from Quick start is all you need. To build a real, shareable installer:
+For everyday running, `composer native:dev` from Quick start is all you need — it's a live dev window, no build step. This section is about producing an actual installable `.exe` and keeping it up to date.
 
+### Building and installing a fresh `.exe`
+
+**1. Bump the version.** In `.env`:
+```
+NATIVEPHP_APP_VERSION=1.0.8
+```
+Every build needs a new number — the installer name and the updater both key off it.
+
+**2. Build:**
 ```bash
-php artisan native:build win
+php artisan native:build win --no-interaction
+```
+Output lands at `nativephp/electron/dist/Agenytics-{version}-setup.exe`. This takes a few minutes.
+
+**3. Close the app if it's running, then uninstall the old version:**
+```powershell
+Get-Process -Name agenytics -ErrorAction SilentlyContinue | Stop-Process -Force
+& "C:\Users\<you>\AppData\Local\Programs\agenytics\Uninstall agenytics.exe" /S
+```
+(If step 3 leaves `agenytics.exe` still sitting in `AppData\Local\Programs\agenytics`, the uninstaller silently failed — usually because a process still had it locked. Delete that folder by hand and move on to step 4; the installer recreates it.)
+
+**4. Install the new one:**
+```powershell
+Start-Process "nativephp\electron\dist\Agenytics-{version}-setup.exe" -ArgumentList "/S" -Wait
 ```
 
-That produces `nativephp/electron/dist/Agenytics-x.x.x-setup.exe`.
+**5. Launch it as Administrator.** This is not optional — launching it normally fails to open at all, with no window and no error, for reasons we never fully root-caused. Always:
+```powershell
+Start-Process "C:\Users\<you>\AppData\Local\Programs\agenytics\agenytics.exe" -Verb RunAs
+```
 
-Ran into two Windows-only issues getting this working, noting them here in case someone else hits the same thing:
+**6. If you added a migration, run it against the installed app's own database too.** The installed app doesn't share a database with your dev environment — it has its own, separate SQLite file, and nothing migrates it automatically after the first run:
+```powershell
+$env:DB_CONNECTION = "sqlite"
+$env:DB_DATABASE = "C:\Users\<you>\AppData\Roaming\agenytics\database\database.sqlite"
+php artisan migrate --force
+```
+
+### The three databases
+
+Easy to lose track of which one you're actually looking at:
+
+| File | Used by |
+|---|---|
+| `database/database.sqlite` | `composer dev` (browser) |
+| `database/nativephp.sqlite` | `composer native:dev` (dev Electron window) — only auto-migrates the *first* time this file is created, not on later migrations |
+| `%APPDATA%\agenytics\database\database.sqlite` | the installed `.exe` (step 6 above) |
+
+### Other Windows-only issues we hit
+
 - Electron would crash on boot with a weird `BrowserWindow` export error — turned out to be `ELECTRON_RUN_AS_NODE` being set in the environment (VS Code's terminal does this), which makes Electron run as plain Node instead of itself.
 - The bundled PHP binary would fail with an OPcache/ASLR error on startup. Windows relocates the binary each run, which breaks OPcache's cached pointers for a statically-linked build. Fixed by pointing `PHPRC` at an ini file that disables opcache for it.
 
