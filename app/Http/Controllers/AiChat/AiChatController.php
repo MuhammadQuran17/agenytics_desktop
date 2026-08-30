@@ -23,9 +23,15 @@ class AiChatController extends Controller
         // if userChat was provided then show that one, otherwise return latest one if it has more than 2 records, otherwise create a new one
         $currentChat = $userChat->exists ? $userChat : $chatService->getLatestOrCreateNewUserChat();
 
-        // Get chat history and transform to DTO for frontend
+        // Order by turn (job_id), not by each row's own created_at: a slow-to-process
+        // job's assistant row can otherwise get a later timestamp than a faster,
+        // later-sent message's rows, making an old answer appear to jump out of order.
         $chatHistory = ChatMessageDTO::fromCollection(
             $currentChat->chatHistories()->with('steps')->orderBy('created_at')->get()
+                ->groupBy('job_id')
+                ->sortBy(fn ($rows) => $rows->min('created_at'))
+                ->flatMap(fn ($rows) => $rows->sortBy(fn ($row) => $row->role === 'user' ? 0 : 1))
+                ->values()
         );
 
         return Inertia::render('AiChat', [

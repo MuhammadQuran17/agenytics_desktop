@@ -19,6 +19,7 @@ class ChatHistory extends Model
         'role',
         'message',
         'error',
+        'rating',
     ];
 
     protected function casts(): array

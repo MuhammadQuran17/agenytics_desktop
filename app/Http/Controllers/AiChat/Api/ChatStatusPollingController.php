@@ -59,6 +59,8 @@ class ChatStatusPollingController extends Controller
             'status' => 'completed',
             'response' => ChatMessageDTO::fromModel($chatHistory)['content'],
             'steps' => $chatHistory->steps->map->only(['message', 'status']),
+            'jobId' => $chatHistory->job_id,
+            'rating' => $chatHistory->rating,
         ]);
     }
 

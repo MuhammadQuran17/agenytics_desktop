@@ -34,7 +34,8 @@ class StripeEventListener
         $planKey = Arr::get($checkoutSession, 'metadata.plan_key');
 
         if (! $planKey) {
-            logger()->debug("[Stripe] Subscription based purchase, no plan key in metadata");
+            logger()->debug('[Stripe] Subscription based purchase, no plan key in metadata');
+
             return;
         }
 
@@ -69,8 +70,8 @@ class StripeEventListener
         $currency = Arr::get($object, 'currency');
         $amountFormatted = $amount ? number_format($amount / 100, 2) : 'N/A';
 
-        $loggerText = "[Stripe] Webhook received: " . $payload['type'] . " with status:"
-            . Arr::get($object, 'status') . " and customerId: $customerId, customerEmail: $customerEmail";
+        $loggerText = '[Stripe] Webhook received: '.$payload['type'].' with status:'
+            .Arr::get($object, 'status')." and customerId: $customerId, customerEmail: $customerEmail";
 
         logger()->debug($loggerText, [
             'event_type' => $payload['type'],

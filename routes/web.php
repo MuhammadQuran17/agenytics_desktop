@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AiChat\AiChatController;
 use App\Http\Controllers\AiChat\Api\ChatStatusPollingController;
+use App\Http\Controllers\AiChat\Api\RateChatMessageController;
 use App\Http\Controllers\AiChat\Api\SendMessageToAiController;
 use App\Http\Controllers\ApiKey\ApiKeyController;
 use App\Http\Controllers\DashboardController;
@@ -29,6 +30,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/create', [AiChatController::class, 'create'])->name('create');
         Route::post('/send', SendMessageToAiController::class)->name('send');
         Route::post('/status', ChatStatusPollingController::class)->name('status');
+        Route::post('/messages/{jobId}/rate', RateChatMessageController::class)->name('messages.rate');
         Route::delete('/{userChat}', [AiChatController::class, 'destroy'])->name('destroy');
         Route::get('/{userChat?}', [AiChatController::class, 'index'])->name('index');
     });

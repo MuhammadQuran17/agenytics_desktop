@@ -6,6 +6,7 @@ use App\Http\Requests\Api\AiAgent\AiAgentSendMessageRequest;
 use App\Neuron\Agents\BrowserAgent;
 use App\Neuron\Middleware\ToolProgressMiddleware;
 use App\Services\AiAgent\AiAgentInterface;
+use App\Services\AiChat\History\AiChatHistory;
 use NeuronAI\Agent\Nodes\ToolNode;
 use NeuronAI\Chat\Messages\UserMessage;
 
@@ -15,6 +16,8 @@ use NeuronAI\Chat\Messages\UserMessage;
 class NeuronAiAgent implements AiAgentInterface
 {
     private ?string $jobId = null;
+
+    public function __construct(private AiChatHistory $aiChatHistory) {}
 
     public function setJobId(string $jobId): void
     {
@@ -32,8 +35,15 @@ class NeuronAiAgent implements AiAgentInterface
             );
         }
 
+        // Without the earlier turns, every message starts the agent from a
+        // blank slate, so a follow-up like "continue" or "retry" has nothing
+        // to go on beyond the words in that one message.
+        $history = $this->jobId !== null
+            ? $this->aiChatHistory->getConversationHistory($request->sessionId, $this->jobId)
+            : [];
+
         $answer = $agent
-            ->chat(new UserMessage($request->message))
+            ->chat([...$history, new UserMessage($request->message)])
             ->getMessage()
             ->getContent();
 

@@ -17,6 +17,7 @@ class ChatMessageDTO
                 'content' => $message->user_input,
                 'role' => 'user',
                 'created_at' => $message->created_at->toIso8601String(),
+                'jobId' => $message->job_id,
             ];
         }
 
@@ -25,6 +26,8 @@ class ChatMessageDTO
             'role' => 'assistant',
             'created_at' => $message->created_at->toIso8601String(),
             'steps' => $message->steps->map->only(['message', 'status'])->all(),
+            'jobId' => $message->job_id,
+            'rating' => $message->rating,
         ];
     }
 
