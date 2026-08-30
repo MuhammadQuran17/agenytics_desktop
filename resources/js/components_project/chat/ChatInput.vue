@@ -53,6 +53,14 @@ const handleKeyDown = (event: KeyboardEvent) => {
         sendMessage();
     }
 };
+
+// Lets a parent (e.g. clicking "Edit" on a past message) load text into the
+// box for the user to tweak and send, instead of editing the bubble in place.
+const setDraft = (text: string) => {
+    newMessage.value = text;
+};
+
+defineExpose({ setDraft });
 </script>
 
 <template>
@@ -87,7 +95,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
                 v-model.trim="newMessage"
                 :class="[
                     'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none',
-                    'rounded-3xl bg-white pb-14 pt-4 pl-14 pr-5 dark:border-zinc-700 w-full',
+                    'rounded-3xl bg-background pb-14 pt-4 pl-14 pr-5 dark:border-zinc-700 w-full',
                     'border-2 focus:outline-none focus:ring-0'
                 ]"
                 placeholder="Send a message..."

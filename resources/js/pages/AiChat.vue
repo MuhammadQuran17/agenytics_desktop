@@ -35,7 +35,7 @@ watch(() => props.chatHistory, (newHistory) => {
     <Head title="AI Chat" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 mt-10">
+        <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 mt-16">
             <ChatBot />
         </div>
     </AppLayout>

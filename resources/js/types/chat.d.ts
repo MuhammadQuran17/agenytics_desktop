@@ -12,4 +12,9 @@ export interface Message {
     created_at: string;
     // The tool-call log recorded while the assistant produced this message
     steps?: { message: string; status: 'in_progress' | 'done' }[];
+    // Identifies the turn (question + answer share one) - lets the UI target
+    // a specific message for edit/retry/rate instead of just its array index
+    jobId?: string;
+    // Assistant messages only: the user's thumbs up/down on this answer
+    rating?: 'good' | 'bad' | null;
 }

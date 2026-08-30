@@ -21,11 +21,16 @@ if (page.props.userChats.length > 0) {
     for (const chat of page.props.userChats) {
         const formattedChatCreatedDate = (() => {
             const date = new Date(chat.created_at);
-            const month = date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
-            const day = date.getUTCDate();
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            return `${month} ${day}, ${hours}:${minutes} UTC`;
+            const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            const daysAgo = Math.round((startOfDay(new Date()).getTime() - startOfDay(date).getTime()) / 86400000);
+
+            if (daysAgo === 0) return `Today, ${time}`;
+            if (daysAgo === 1) return `Yesterday, ${time}`;
+
+            const month = date.toLocaleString('en-US', { month: 'short' });
+            return `${month} ${date.getDate()}, ${time}`;
         })();
 
         mainNavItems.push({

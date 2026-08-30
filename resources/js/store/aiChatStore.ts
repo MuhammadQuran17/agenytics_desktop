@@ -26,12 +26,16 @@ export const useAiChatStore = defineStore('ai-chat', {
         processingSessionIds: new Set<string>(),
         activePollingJobs: new Map<string, string>(), // sessionId -> jobId
         progressSteps: new Map<string, ProgressStep[]>(), // sessionId -> ordered tool-call log
+        stalledSessions: new Set<string>(), // sessionId -> polling gave up on a network outage, job may still be running
+        failedSessions: new Map<string, string>(), // sessionId -> error message from a job that failed server-side (e.g. the AI provider was unreachable)
     }
   },
   getters: {
     hasActiveChatHistory: (state) => state.currentChatHistory.length > 0,
     isSessionProcessing: (state) => (sessionId: string) => state.processingSessionIds.has(sessionId),
     getProgressSteps: (state) => (sessionId: string) => state.progressSteps.get(sessionId) ?? [],
+    isSessionStalled: (state) => (sessionId: string) => state.stalledSessions.has(sessionId),
+    getSessionFailure: (state) => (sessionId: string) => state.failedSessions.get(sessionId),
   },
   actions: {
     setChatHistory(history: Message[]) {
@@ -43,6 +47,14 @@ export const useAiChatStore = defineStore('ai-chat', {
     addMessage(message: Message) {
       this.currentChatHistory.push(message)
     },
+
+    setMessageRating(jobId: string, rating: 'good' | 'bad' | null) {
+      const message = this.currentChatHistory.find((m) => m.role === 'assistant' && m.jobId === jobId)
+      if (message) {
+        message.rating = rating
+      }
+    },
+
     addProcessingSession(sessionId: string) {
       this.processingSessionIds.add(sessionId)
     },
@@ -75,11 +87,34 @@ export const useAiChatStore = defineStore('ai-chat', {
     getActiveJobForSession(sessionId: string): string | undefined {
       return this.activePollingJobs.get(sessionId)
     },
-    
+
     cleanupCompletedJob(sessionId: string) {
       this.stopPollingForSession(sessionId)
     },
-    
+
+    // Polling gave up after a prolonged network outage, but the job itself
+    // (and its localStorage entry) is deliberately left in place so "Continue"
+    // can resume checking on it instead of losing track of the in-flight answer.
+    markSessionStalled(sessionId: string) {
+      this.stalledSessions.add(sessionId)
+    },
+
+    clearSessionStalled(sessionId: string) {
+      this.stalledSessions.delete(sessionId)
+    },
+
+    // The job reached the server and ran, but ultimately failed (e.g. the AI
+    // provider was unreachable because the internet dropped mid-request).
+    // Kept visible in the chat itself, not just a toast, so it survives being missed.
+    markSessionFailed(sessionId: string, message: string) {
+      this.failedSessions.set(sessionId, message)
+    },
+
+    clearSessionFailed(sessionId: string) {
+      this.failedSessions.delete(sessionId)
+    },
+
+
     loadPollingStateFromStorage() {
       try {
         const stored = localStorage.getItem(POLLING_STORAGE_KEY)

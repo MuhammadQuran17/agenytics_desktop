@@ -31,9 +31,9 @@ const handleSuggestion = (suggestion: { id: string; prompt: string }) => {
             v-for="button in suggestionButtons"
             :key="button.id"
             @click="handleSuggestion(button)"
-            class="text-left px-4 py-3 border border-border rounded-lg hover:bg-muted transition-colors cursor-pointer"
+            class="text-left px-4 py-3 border border-border rounded-lg hover:bg-muted hover:border-primary/40 transition-colors cursor-pointer"
         >
-            <div class="text-gray-700 text-sm">{{ button.prompt }}</div>
+            <div class="text-foreground text-sm">{{ button.prompt }}</div>
         </button>
     </div>
 </template> 

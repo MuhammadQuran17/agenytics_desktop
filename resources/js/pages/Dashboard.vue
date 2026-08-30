@@ -67,7 +67,7 @@ const formatDate = (isoDate: string): string => {
     <Head title="Dashboard" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="mt-10 flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+        <div class="mt-16 flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
             <!-- Filter row: one row, above the content it scopes -->
             <div class="flex items-center gap-2">
                 <Button

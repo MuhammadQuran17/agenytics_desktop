@@ -14,6 +14,8 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
     const pollingIntervalIds = ref<Map<string, number>>(new Map());
     const pollingAttempts = ref<Map<string, number>>(new Map());
     const maxPollingAttempts = 600; // 600 * 1 second = 10 minutes max
+    const networkFailureCounts = ref<Map<string, number>>(new Map());
+    const maxNetworkFailures = 120; // 120 * 1 second = 2 minutes of no connection before we give up and wait for "Continue"
 
     const stopPolling = (sessionId: string) => {
         const intervalId = pollingIntervalIds.value.get(sessionId);
@@ -29,7 +31,16 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
             const response = await axios.post(route('chat.status'), {
                 jobId: String(jobId)
             });
-            const { status, response: aiResponse, error, steps } = response.data;
+
+            // Connection is back (or was never down) - clear any outage bookkeeping
+            if (networkFailureCounts.value.has(sessionId)) {
+                networkFailureCounts.value.delete(sessionId);
+                toast.success('Connection restored');
+            }
+            aiChatStore.clearSessionStalled(sessionId);
+            aiChatStore.clearSessionFailed(sessionId);
+
+            const { status, response: aiResponse, error, steps, jobId: responseJobId, rating } = response.data;
 
             if (status === 'completed') {
                 stopPolling(sessionId);
@@ -41,12 +52,16 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
                         role: 'assistant',
                         created_at: new Date().toISOString(),
                         steps,
+                        jobId: responseJobId ?? jobId,
+                        rating,
                     });
                 }
             } else if (status === 'failed') {
                 stopPolling(sessionId);
                 aiChatStore.stopPollingForSession(sessionId);
-                toast.error(error || 'Processing failed. Please try again.');
+                const message = error || 'Processing failed. Please try again.';
+                aiChatStore.markSessionFailed(sessionId, message);
+                toast.error(message);
             } else if (status === 'processing') {
                 aiChatStore.setProgressSteps(sessionId, steps);
 
@@ -57,10 +72,36 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
                 if (attempts >= maxPollingAttempts) {
                     stopPolling(sessionId);
                     aiChatStore.stopPollingForSession(sessionId);
-                    toast.error('Processing timeout. Please try again.');
+                    const message = 'Processing timeout. Please try again.';
+                    aiChatStore.markSessionFailed(sessionId, message);
+                    toast.error(message);
                 }
             }
         } catch (error: any) {
+            // No response at all (offline, DNS failure, server unreachable) is a transient
+            // network problem, not a job failure - the backend job keeps running regardless.
+            // Keep the interval and the localStorage job entry alive so a poll a few seconds
+            // later (once connectivity returns) picks the answer up automatically.
+            const isNetworkError = !error.response;
+
+            if (isNetworkError) {
+                const failures = (networkFailureCounts.value.get(sessionId) || 0) + 1;
+                networkFailureCounts.value.set(sessionId, failures);
+
+                if (failures === 1) {
+                    toast.warning('Connection lost. Retrying...');
+                }
+
+                if (failures >= maxNetworkFailures) {
+                    // Stop hammering the network, but leave the job/session state intact
+                    // so the "Continue" affordance in the UI can resume it on demand.
+                    stopPolling(sessionId);
+                    aiChatStore.markSessionStalled(sessionId);
+                }
+
+                return;
+            }
+
             stopPolling(sessionId);
             aiChatStore.stopPollingForSession(sessionId);
             toast.error(error.response?.data?.message || 'Failed to check job status');
@@ -85,6 +126,19 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
         // Only resume if not already polling
         if (!pollingIntervalIds.value.has(sessionId)) {
             startPolling(sessionId, jobId);
+        }
+    };
+
+    // Manual retry for a session that gave up after a prolonged network outage
+    // (see markSessionStalled above) - the job was never removed from the store,
+    // so this just picks polling back up on it.
+    const continuePolling = (sessionId: string) => {
+        networkFailureCounts.value.delete(sessionId);
+        aiChatStore.clearSessionStalled(sessionId);
+
+        const activeJobId = aiChatStore.getActiveJobForSession(sessionId);
+        if (activeJobId) {
+            resumePollingForSession(sessionId, activeJobId);
         }
     };
 
@@ -128,6 +182,8 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
             // Check if new session has active job and resume if needed
             const activeJobId = aiChatStore.getActiveJobForSession(newSessionId);
             if (activeJobId) {
+                networkFailureCounts.value.delete(newSessionId);
+                aiChatStore.clearSessionStalled(newSessionId);
                 resumePollingForSession(newSessionId, activeJobId);
             }
         }
@@ -143,6 +199,7 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
 
     return {
         startPolling,
+        continuePolling,
     };
 }
 
