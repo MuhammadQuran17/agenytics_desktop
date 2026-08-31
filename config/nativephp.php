@@ -154,7 +154,12 @@ return [
         'default' => [
             'queues' => ['default'],
             'memory_limit' => 128,
-            'timeout' => 60,
+            // Multi-step browser automation (e.g. "open all PDFs and execute
+            // each one") can easily run past a minute. In dev, this value also
+            // becomes queue:listen's child-process timeout - exceeding it there
+            // doesn't just fail the job, it crashes the whole listener with no
+            // auto-restart, silently freezing every chat until the app restarts.
+            'timeout' => 300,
             'sleep' => 3,
         ],
     ],
