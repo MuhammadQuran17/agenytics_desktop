@@ -279,35 +279,33 @@ const handleRate = async (jobId: string | undefined, rating: 'good' | 'bad') => 
                                 v-html="message.content && marked.parse(message.content as string)"
                             ></div>
 
-                            <div class="mt-1.5 flex h-7 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                                <Button size="icon" variant="ghost" class="h-7! w-7! rounded-md text-muted-foreground hover:text-foreground" title="Copy" @click="handleCopy(message)">
+                            <div class="mt-1.5 flex h-6 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                                <button type="button" class="action-icon-btn" title="Copy" @click="handleCopy(message)">
                                     <Copy class="h-3.5 w-3.5" />
-                                </Button>
-                                <Button size="icon" variant="ghost" class="h-7! w-7! rounded-md text-muted-foreground hover:text-foreground" title="Retry" @click="handleResend(message)">
+                                </button>
+                                <button type="button" class="action-icon-btn" title="Retry" @click="handleResend(message)">
                                     <RotateCcw class="h-3.5 w-3.5" />
-                                </Button>
-                                <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    class="h-7! w-7! rounded-md text-muted-foreground hover:text-foreground"
-                                    :class="{ 'text-primary hover:text-primary': message.rating === 'good' }"
+                                </button>
+                                <button
+                                    type="button"
+                                    class="action-icon-btn"
+                                    :class="{ 'text-primary!': message.rating === 'good' }"
                                     title="Good response"
                                     @click="handleRate(message.jobId, 'good')"
                                 >
                                     <ThumbsUp class="h-3.5 w-3.5" />
-                                </Button>
-                                <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    class="h-7! w-7! rounded-md text-muted-foreground hover:text-foreground"
-                                    :class="{ 'text-destructive hover:text-destructive': message.rating === 'bad' }"
+                                </button>
+                                <button
+                                    type="button"
+                                    class="action-icon-btn"
+                                    :class="{ 'text-destructive!': message.rating === 'bad' }"
                                     title="Bad response"
                                     @click="handleRate(message.jobId, 'bad')"
                                 >
                                     <ThumbsDown class="h-3.5 w-3.5" />
-                                </Button>
+                                </button>
 
-                                <span class="ml-1 text-xs text-muted-foreground" :title="formatMessageTime(message.created_at)">{{ formatRelativeTime(message.created_at) }}</span>
+                                <span class="ml-1.5 text-xs text-muted-foreground" :title="formatMessageTime(message.created_at)">{{ formatRelativeTime(message.created_at) }}</span>
                             </div>
                         </div>
 
@@ -321,18 +319,18 @@ const handleRate = async (jobId: string | undefined, rating: 'good' | 'bad') => 
                                 <div class="text-secondary-foreground">{{ message.content }}</div>
                             </div>
 
-                            <div class="mt-1.5 flex h-7 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                                <span class="mr-1 text-xs text-muted-foreground" :title="formatMessageTime(message.created_at)">{{ formatRelativeTime(message.created_at) }}</span>
+                            <div class="mt-1.5 flex h-6 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                                <span class="mr-1.5 text-xs text-muted-foreground" :title="formatMessageTime(message.created_at)">{{ formatRelativeTime(message.created_at) }}</span>
 
-                                <Button size="icon" variant="ghost" class="h-7! w-7! rounded-md text-muted-foreground hover:text-foreground" title="Copy" @click="handleCopy(message)">
+                                <button type="button" class="action-icon-btn" title="Copy" @click="handleCopy(message)">
                                     <Copy class="h-3.5 w-3.5" />
-                                </Button>
-                                <Button size="icon" variant="ghost" class="h-7! w-7! rounded-md text-muted-foreground hover:text-foreground" title="Edit" @click="startEdit(message)">
+                                </button>
+                                <button type="button" class="action-icon-btn" title="Edit" @click="startEdit(message)">
                                     <Pencil class="h-3.5 w-3.5" />
-                                </Button>
-                                <Button size="icon" variant="ghost" class="h-7! w-7! rounded-md text-muted-foreground hover:text-foreground" title="Retry" @click="handleResend(message)">
+                                </button>
+                                <button type="button" class="action-icon-btn" title="Retry" @click="handleResend(message)">
                                     <RotateCcw class="h-3.5 w-3.5" />
-                                </Button>
+                                </button>
                             </div>
                         </div>
                     </template>
@@ -358,6 +356,23 @@ const handleRate = async (jobId: string | undefined, rating: 'good' | 'bad') => 
 </template>
 
 <style scoped>
+.action-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.5rem;
+  width: 1.5rem;
+  border-radius: 0.375rem;
+  color: var(--muted-foreground);
+  transition: background-color 0.15s ease, color 0.15s ease;
+  cursor: pointer;
+}
+
+.action-icon-btn:hover {
+  background-color: var(--accent);
+  color: var(--foreground);
+}
+
 .fade-enter-active {
   transition: opacity 1s ease;
 }
