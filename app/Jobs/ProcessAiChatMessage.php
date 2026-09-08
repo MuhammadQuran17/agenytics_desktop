@@ -18,6 +18,15 @@ class ProcessAiChatMessage implements ShouldQueue
     use Queueable;
 
     /**
+     * Total attempts before giving up. Gemini outages of a couple of minutes
+     * are common enough to plan for, so this is tuned to absorb roughly that
+     * long automatically - the user never sees a failure for one of those.
+     * Takes priority over the queue worker's own --tries flag, so this
+     * applies the same way in dev and in the packaged app.
+     */
+    public int $tries = 6;
+
+    /**
      * Create a new job instance.
      */
     public function __construct(
@@ -25,6 +34,18 @@ class ProcessAiChatMessage implements ShouldQueue
         private string $userId,
         private string $jobId,
     ) {}
+
+    /**
+     * Seconds to wait before each retry. The last value repeats for any
+     * attempt beyond the array's length. Sums to 150s (2.5 minutes) of
+     * deliberate waiting, on top of the attempts themselves.
+     *
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [10, 20, 30, 40, 50];
+    }
 
     /**
      * Execute the job.
@@ -74,7 +95,9 @@ class ProcessAiChatMessage implements ShouldQueue
                 [
                     'user_chat_session_id' => $this->request['sessionId'],
                     'job_status' => 'failed',
-                    'error' => $exception?->getMessage().' Please try again later.' ?? 'An unexpected error occurred while processing your message. Please try again later.',
+                    'error' => $exception === null
+                        ? 'An unexpected error occurred while processing your message. Please try again later.'
+                        : $exception->getMessage().' Please try again later.',
                 ],
             );
 

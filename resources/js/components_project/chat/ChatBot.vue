@@ -263,50 +263,61 @@ const handleRate = async (jobId: string | undefined, rating: 'good' | 'bad') => 
                                 </div>
                             </details>
 
-                            <!-- UI Blocks Strategy Pattern -->
-                            <div v-if="isUiBlockMessage(message)" class="ui-blocks-container">
-                                <UiBlockWrapper
-                                    v-for="(block, blockIndex) in parseUiBlocks(message.content)"
-                                    :key="blockIndex"
-                                    :block="block"
-                                />
+                            <!-- A failed turn has nothing to render as an answer - show why it
+                                 failed and a way to redo it, instead of a blank reply. Loaded from
+                                 the database, so this survives a reload/app restart, unlike the
+                                 in-memory banner shown while the failure just happened live. -->
+                            <div v-if="message.jobStatus === 'failed'" class="flex items-center gap-3 text-sm text-destructive">
+                                <span>{{ message.error || 'Processing failed.' }}</span>
+                                <Button size="sm" variant="outline" @click="handleResend(message)">Retry</Button>
                             </div>
 
-                            <!-- Fallback to Markdown rendering -->
-                            <div
-                                v-else
-                                class="markdown-content"
-                                v-html="message.content && marked.parse(message.content as string)"
-                            ></div>
+                            <template v-else>
+                                <!-- UI Blocks Strategy Pattern -->
+                                <div v-if="isUiBlockMessage(message)" class="ui-blocks-container">
+                                    <UiBlockWrapper
+                                        v-for="(block, blockIndex) in parseUiBlocks(message.content)"
+                                        :key="blockIndex"
+                                        :block="block"
+                                    />
+                                </div>
 
-                            <div class="mt-1.5 flex h-6 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                                <button type="button" class="action-icon-btn" title="Copy" @click="handleCopy(message)">
-                                    <Copy class="h-3.5 w-3.5" />
-                                </button>
-                                <button type="button" class="action-icon-btn" title="Retry" @click="handleResend(message)">
-                                    <RotateCcw class="h-3.5 w-3.5" />
-                                </button>
-                                <button
-                                    type="button"
-                                    class="action-icon-btn"
-                                    :class="{ 'text-primary!': message.rating === 'good' }"
-                                    title="Good response"
-                                    @click="handleRate(message.jobId, 'good')"
-                                >
-                                    <ThumbsUp class="h-3.5 w-3.5" />
-                                </button>
-                                <button
-                                    type="button"
-                                    class="action-icon-btn"
-                                    :class="{ 'text-destructive!': message.rating === 'bad' }"
-                                    title="Bad response"
-                                    @click="handleRate(message.jobId, 'bad')"
-                                >
-                                    <ThumbsDown class="h-3.5 w-3.5" />
-                                </button>
+                                <!-- Fallback to Markdown rendering -->
+                                <div
+                                    v-else
+                                    class="markdown-content"
+                                    v-html="message.content && marked.parse(message.content as string)"
+                                ></div>
 
-                                <span class="ml-1.5 text-xs text-muted-foreground" :title="formatMessageTime(message.created_at)">{{ formatRelativeTime(message.created_at) }}</span>
-                            </div>
+                                <div class="mt-1.5 flex h-6 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                                    <button type="button" class="action-icon-btn" title="Copy" @click="handleCopy(message)">
+                                        <Copy class="h-3.5 w-3.5" />
+                                    </button>
+                                    <button type="button" class="action-icon-btn" title="Retry" @click="handleResend(message)">
+                                        <RotateCcw class="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="action-icon-btn"
+                                        :class="{ 'text-primary!': message.rating === 'good' }"
+                                        title="Good response"
+                                        @click="handleRate(message.jobId, 'good')"
+                                    >
+                                        <ThumbsUp class="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="action-icon-btn"
+                                        :class="{ 'text-destructive!': message.rating === 'bad' }"
+                                        title="Bad response"
+                                        @click="handleRate(message.jobId, 'bad')"
+                                    >
+                                        <ThumbsDown class="h-3.5 w-3.5" />
+                                    </button>
+
+                                    <span class="ml-1.5 text-xs text-muted-foreground" :title="formatMessageTime(message.created_at)">{{ formatRelativeTime(message.created_at) }}</span>
+                                </div>
+                            </template>
                         </div>
 
                         <!-- User messages -->

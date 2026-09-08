@@ -17,4 +17,9 @@ export interface Message {
     jobId?: string;
     // Assistant messages only: the user's thumbs up/down on this answer
     rating?: 'good' | 'bad' | null;
+    // Assistant messages only: whether this turn's job ultimately failed, and
+    // why - loaded from the database so the failure survives a page reload
+    // or app restart, unlike the in-memory "Retry" banner shown while live.
+    jobStatus?: 'processing' | 'completed' | 'failed';
+    error?: string | null;
 }

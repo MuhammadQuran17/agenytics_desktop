@@ -28,6 +28,12 @@ class ChatMessageDTO
             'steps' => $message->steps->map->only(['message', 'status'])->all(),
             'jobId' => $message->job_id,
             'rating' => $message->rating,
+            // A failed turn has no content to render, so the frontend needs
+            // to know it failed (and why) to show that instead of a blank
+            // reply - otherwise it silently vanishes the moment the app
+            // restarts and the in-memory "Retry" banner is gone with it.
+            'jobStatus' => $message->job_status,
+            'error' => $message->error,
         ];
     }
 

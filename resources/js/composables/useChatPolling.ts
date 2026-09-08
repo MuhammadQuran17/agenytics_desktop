@@ -13,7 +13,12 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
     
     const pollingIntervalIds = ref<Map<string, number>>(new Map());
     const pollingAttempts = ref<Map<string, number>>(new Map());
-    const maxPollingAttempts = 600; // 600 * 1 second = 10 minutes max
+    // The backend job now retries itself up to 5 times on failure (150s of
+    // combined backoff, tuned to ride out a couple-minute Gemini outage) on
+    // top of its own 300s per-attempt timeout, so the worst case for one
+    // message is ~32 minutes. 2700 gives headroom above that instead of the
+    // frontend giving up mid-retry.
+    const maxPollingAttempts = 2700; // 2700 * 1 second = 45 minutes max
     const networkFailureCounts = ref<Map<string, number>>(new Map());
     const maxNetworkFailures = 120; // 120 * 1 second = 2 minutes of no connection before we give up and wait for "Continue"
 

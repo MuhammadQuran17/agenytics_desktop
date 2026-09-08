@@ -45,6 +45,35 @@ it('includes the recorded tool-call steps for assistant messages in the chat pag
     });
 });
 
+it('surfaces a failed turn\'s error so it survives a page reload, not just the live "Retry" banner', function () {
+    $user = makeUserWithPrompts(5);
+    $userChat = UserChat::factory()->create(['user_id' => $user->id]);
+
+    $this->actingAs($user);
+
+    ChatHistory::create([
+        'user_chat_session_id' => $userChat->session_id,
+        'job_id' => 'test-job-failed-reload',
+        'role' => 'user',
+        'user_input' => 'What is the weather?',
+    ]);
+
+    ChatHistory::create([
+        'user_chat_session_id' => $userChat->session_id,
+        'job_id' => 'test-job-failed-reload',
+        'job_status' => 'failed',
+        'role' => 'assistant',
+        'error' => 'Gemini API Error: quota exceeded Please try again later.',
+    ]);
+
+    $response = $this->get(route('chat.index', $userChat->session_id));
+
+    $response->assertInertia(function ($page) {
+        $page->where('chatHistory.1.jobStatus', 'failed')
+            ->where('chatHistory.1.error', 'Gemini API Error: quota exceeded Please try again later.');
+    });
+});
+
 it('returns an empty steps list for assistant messages with no recorded steps', function () {
     $user = makeUserWithPrompts(5);
     $userChat = UserChat::factory()->create(['user_id' => $user->id]);
