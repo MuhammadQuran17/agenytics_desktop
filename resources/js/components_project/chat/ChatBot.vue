@@ -266,9 +266,12 @@ const handleRate = async (jobId: string | undefined, rating: 'good' | 'bad') => 
                             <!-- A failed turn has nothing to render as an answer - show why it
                                  failed and a way to redo it, instead of a blank reply. Loaded from
                                  the database, so this survives a reload/app restart, unlike the
-                                 in-memory banner shown while the failure just happened live. -->
-                            <div v-if="message.jobStatus === 'failed'" class="flex items-center gap-3 text-sm text-destructive">
-                                <span>{{ message.error || 'Processing failed.' }}</span>
+                                 in-memory banner shown while the failure just happened live.
+                                 A turn stuck on "processing" (the app was closed or the worker
+                                 died before the job could finish or call failed()) is treated the
+                                 same way, since it will never complete on its own either. -->
+                            <div v-if="message.jobStatus === 'failed' || message.jobStatus === 'processing'" class="flex items-center gap-3 text-sm text-destructive">
+                                <span>{{ message.error || 'Processing was interrupted.' }}</span>
                                 <Button size="sm" variant="outline" @click="handleResend(message)">Retry</Button>
                             </div>
 
