@@ -113,6 +113,56 @@ describe('Chat Status Polling', function () {
         ]);
     });
 
+    it('marks a job stuck in processing well past the worst-case retry window as failed', function () {
+        $user = makeUserWithPrompts(5);
+        $userChat = UserChat::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user);
+
+        $jobId = 'test-job-stale';
+
+        $chatHistory = ChatHistory::create([
+            'user_chat_session_id' => $userChat->session_id,
+            'job_id' => $jobId,
+            'job_status' => 'processing',
+            'role' => 'assistant',
+        ]);
+        $chatHistory->forceFill(['created_at' => now()->subMinutes(41)])->save();
+
+        $response = $this->postJson(route('chat.status'), ['jobId' => $jobId]);
+
+        $response->assertSuccessful();
+        $response->assertJson([
+            'status' => 'failed',
+            'error' => 'Processing was interrupted and never completed. Please try again.',
+        ]);
+
+        expect($chatHistory->refresh()->job_status)->toBe('failed');
+    });
+
+    it('does not mark a job still within its normal retry window as failed', function () {
+        $user = makeUserWithPrompts(5);
+        $userChat = UserChat::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user);
+
+        $jobId = 'test-job-still-retrying';
+
+        $chatHistory = ChatHistory::create([
+            'user_chat_session_id' => $userChat->session_id,
+            'job_id' => $jobId,
+            'job_status' => 'processing',
+            'role' => 'assistant',
+        ]);
+        $chatHistory->forceFill(['created_at' => now()->subMinutes(30)])->save();
+
+        $response = $this->postJson(route('chat.status'), ['jobId' => $jobId]);
+
+        $response->assertSuccessful();
+        $response->assertJson(['status' => 'processing']);
+        expect($chatHistory->refresh()->job_status)->toBe('processing');
+    });
+
     it('returns completed status with response when job is done', function () {
         $user = makeUserWithPrompts(5);
         $userChat = UserChat::factory()->create(['user_id' => $user->id]);

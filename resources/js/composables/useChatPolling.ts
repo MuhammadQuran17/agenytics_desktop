@@ -11,24 +11,37 @@ interface UseChatPollingOptions {
 export function useChatPolling({ currentChatSessionId, messages }: UseChatPollingOptions) {
     const aiChatStore = useAiChatStore();
     
-    const pollingIntervalIds = ref<Map<string, number>>(new Map());
-    const pollingAttempts = ref<Map<string, number>>(new Map());
+    const pollingTimeoutIds = ref<Map<string, number>>(new Map());
+    // Wall-clock time each session started polling, not a poll count - a poll
+    // counter assumes the interval fires exactly on schedule, but a
+    // backgrounded/minimized window gets throttled by the browser/Electron
+    // and would take far longer than intended to reach a fixed count.
+    const pollingStartTimes = ref<Map<string, number>>(new Map());
     // The backend job now retries itself up to 5 times on failure (150s of
     // combined backoff, tuned to ride out a couple-minute Gemini outage) on
     // top of its own 300s per-attempt timeout, so the worst case for one
-    // message is ~32 minutes. 2700 gives headroom above that instead of the
-    // frontend giving up mid-retry.
-    const maxPollingAttempts = 2700; // 2700 * 1 second = 45 minutes max
+    // message is ~32 minutes. 45 minutes gives headroom above that instead
+    // of the frontend giving up mid-retry.
+    const maxPollingDurationMs = 45 * 60 * 1000;
     const networkFailureCounts = ref<Map<string, number>>(new Map());
     const maxNetworkFailures = 120; // 120 * 1 second = 2 minutes of no connection before we give up and wait for "Continue"
 
+    // How long to wait before the next poll, given how long we've already
+    // been polling this job. Starts fast so live tool-progress text shows up
+    // promptly, then backs off to avoid hammering the server on long jobs.
+    const getPollDelayMs = (elapsedMs: number): number => {
+        if (elapsedMs < 30_000) return 1000;
+        if (elapsedMs < 120_000) return 3000;
+        return 5000;
+    };
+
     const stopPolling = (sessionId: string) => {
-        const intervalId = pollingIntervalIds.value.get(sessionId);
-        if (intervalId) {
-            clearInterval(intervalId);
-            pollingIntervalIds.value.delete(sessionId);
-            pollingAttempts.value.delete(sessionId);
+        const timeoutId = pollingTimeoutIds.value.get(sessionId);
+        if (timeoutId) {
+            clearTimeout(timeoutId);
         }
+        pollingTimeoutIds.value.delete(sessionId);
+        pollingStartTimes.value.delete(sessionId);
     };
 
     const pollJobStatus = async (sessionId: string, jobId: string) => {
@@ -70,11 +83,8 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
             } else if (status === 'processing') {
                 aiChatStore.setProgressSteps(sessionId, steps);
 
-                // Continue polling
-                const attempts = (pollingAttempts.value.get(sessionId) || 0) + 1;
-                pollingAttempts.value.set(sessionId, attempts);
-
-                if (attempts >= maxPollingAttempts) {
+                const startedAt = pollingStartTimes.value.get(sessionId);
+                if (startedAt && Date.now() - startedAt >= maxPollingDurationMs) {
                     stopPolling(sessionId);
                     aiChatStore.stopPollingForSession(sessionId);
                     const message = 'Processing timeout. Please try again.';
@@ -113,23 +123,37 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
         }
     };
 
+    // Schedules the next poll and reschedules itself after each response,
+    // with a growing delay - replaces a fixed setInterval so the poll cadence
+    // can back off on long-running jobs instead of hammering the server.
+    const scheduleNextPoll = (sessionId: string, jobId: string, delay: number) => {
+        const timeoutId = window.setTimeout(async () => {
+            await pollJobStatus(sessionId, jobId);
+
+            // pollJobStatus may have called stopPolling (completed/failed/timeout) -
+            // only keep going if this session is still actively tracked.
+            const startedAt = pollingStartTimes.value.get(sessionId);
+            if (startedAt !== undefined) {
+                scheduleNextPoll(sessionId, jobId, getPollDelayMs(Date.now() - startedAt));
+            }
+        }, delay);
+
+        pollingTimeoutIds.value.set(sessionId, timeoutId);
+    };
+
     const startPolling = (sessionId: string, jobId: string) => {
         // Stop any existing polling for this session
         stopPolling(sessionId);
-        
-        pollingAttempts.value.set(sessionId, 0);
+
+        pollingStartTimes.value.set(sessionId, Date.now());
         aiChatStore.startPollingForSession(sessionId, jobId);
-        
-        const intervalId = window.setInterval(() => {
-            pollJobStatus(sessionId, jobId);
-        }, 1000); // Poll every second, so live tool-progress text has a chance to show up
-        
-        pollingIntervalIds.value.set(sessionId, intervalId);
+
+        scheduleNextPoll(sessionId, jobId, 1000);
     };
 
     const resumePollingForSession = (sessionId: string, jobId: string) => {
         // Only resume if not already polling
-        if (!pollingIntervalIds.value.has(sessionId)) {
+        if (!pollingTimeoutIds.value.has(sessionId)) {
             startPolling(sessionId, jobId);
         }
     };
@@ -196,11 +220,11 @@ export function useChatPolling({ currentChatSessionId, messages }: UseChatPollin
 
     // Clean up all polling on component unmount
     onBeforeUnmount(() => {
-        // Stop all active polling intervals
-        pollingIntervalIds.value.forEach((_, sessionId) => {
+        // Stop all active polling timeouts
+        pollingTimeoutIds.value.forEach((_, sessionId) => {
             stopPolling(sessionId);
         });
-    }); 
+    });
 
     return {
         startPolling,

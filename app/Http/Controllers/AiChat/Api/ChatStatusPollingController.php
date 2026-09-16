@@ -12,6 +12,15 @@ use Illuminate\Support\Facades\Log;
 class ChatStatusPollingController extends Controller
 {
     /**
+     * A job stuck on "processing" for longer than this was never going to
+     * finish on its own - the worker that owned it crashed or the app was
+     * closed before it could call failed(). This is set comfortably above
+     * ProcessAiChatMessage's own worst case (~32.5 minutes of retries and
+     * per-attempt timeouts) so legitimately-retrying jobs are never cut off.
+     */
+    private const STALE_PROCESSING_MINUTES = 40;
+
+    /**
      * Check the status of a chat job.
      */
     public function __invoke(Request $request): JsonResponse
@@ -76,12 +85,35 @@ class ChatStatusPollingController extends Controller
 
     private function processingResponse(ChatHistory $chatHistory): JsonResponse
     {
+        if ($chatHistory->created_at->lt(now()->subMinutes(self::STALE_PROCESSING_MINUTES))) {
+            return $this->markStaleAsFailed($chatHistory);
+        }
+
         return response()->json([
             'status' => 'processing',
             'steps' => $chatHistory->role === 'assistant'
                 ? $chatHistory->steps->map->only(['message', 'status'])
                 : [],
         ]);
+    }
+
+    private function markStaleAsFailed(ChatHistory $chatHistory): JsonResponse
+    {
+        Log::error("Polling: job {$chatHistory->job_id} stuck in processing beyond ".self::STALE_PROCESSING_MINUTES.' minutes, marking failed');
+
+        $assistantRow = $chatHistory->role === 'assistant'
+            ? $chatHistory
+            : ChatHistory::firstOrCreate(
+                ['job_id' => $chatHistory->job_id, 'role' => 'assistant'],
+                ['user_chat_session_id' => $chatHistory->user_chat_session_id]
+            );
+
+        $assistantRow->update([
+            'job_status' => 'failed',
+            'error' => 'Processing was interrupted and never completed. Please try again.',
+        ]);
+
+        return $this->failedResponse($assistantRow);
     }
 
     private function jobNotFoundResponse(string $jobId): JsonResponse
